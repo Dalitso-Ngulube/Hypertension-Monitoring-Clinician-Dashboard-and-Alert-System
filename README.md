@@ -37,5 +37,5 @@ This project is a web-based system designed to help clinicians monitor and manag
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/your-username/hypertension-monitoring.git
-cd hypertension-monitoring
+git clone https://github.com/your-username/Hypertension-Monitoring-Clinician-Dashboard-and-Alert-System.git
+cd Hypertension-Monitoring-Clinician-Dashboard-and-Alert-System
