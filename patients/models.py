@@ -14,8 +14,10 @@ class Patient(models.Model):
     age = models.PositiveIntegerField()
 
     gender = models.CharField(
-        max_length=1,
-        choices=GENDER_CHOICES
+        max_length=10,
+        choices=GENDER_CHOICES,
+        blank=True,
+        null=True
     )
 
     phone_number = models.CharField(
