@@ -33,6 +33,10 @@ urlpatterns = [
         include('patients.urls')
     ),
     
+    path(
+    'api/readings/',
+    include('bp_readings.urls')
+),
     
     
 ]
