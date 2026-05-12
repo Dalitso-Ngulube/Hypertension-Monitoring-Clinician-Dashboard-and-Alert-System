@@ -3,6 +3,7 @@ from rest_framework import generics
 from .models import BPReading
 from .serializers import BPReadingSerializer
 from alerts.models import Alert
+from .utils import classify_bp
 
 
 class BPReadingListCreateView(generics.ListCreateAPIView):
@@ -11,6 +12,7 @@ class BPReadingListCreateView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         reading = serializer.save()
+    
 
         systolic = reading.systolic
         diastolic = reading.diastolic
@@ -18,27 +20,32 @@ class BPReadingListCreateView(generics.ListCreateAPIView):
         print("VIEW TRIGGERED")
         print(systolic, diastolic)
 
-        # Critical alert
-        if systolic >= 180 or diastolic >= 120:
-            print("CREATING CRITICAL ALERT")
+    
+        risk = classify_bp(systolic, diastolic)
 
+        # CRISIS case from classifier
+        if risk == "CRISIS":
             Alert.objects.create(
                 patient=reading.patient,
-                severity='CRITICAL',
-                message=f'Critical BP reading detected: {systolic}/{diastolic}'
+                severity="CRITICAL",
+                message=f"Crisis BP detected ({systolic}/{diastolic})"
             )
 
-        # High BP alert
+        # fallback rule-based logic 
+        elif systolic >= 180 or diastolic >= 120:
+            Alert.objects.create(
+                patient=reading.patient,
+                severity="CRITICAL",
+                message=f"Critical BP reading detected: {systolic}/{diastolic}"
+            )
+
         elif systolic >= 140 or diastolic >= 90:
-            print("CREATING HIGH ALERT")
-
             Alert.objects.create(
                 patient=reading.patient,
-                severity='HIGH',
-                message=f'High BP reading detected: {systolic}/{diastolic}'
+                severity="HIGH",
+                message=f"High BP reading detected: {systolic}/{diastolic}"
             )
-
-
+            
 class BPReadingDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = BPReading.objects.all()
-    serializer_class = BPReadingSerializer
+    serializer_class = BPReadingSerializer            
