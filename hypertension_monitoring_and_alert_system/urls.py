@@ -37,6 +37,10 @@ urlpatterns = [
     'api/readings/',
     include('bp_readings.urls')
 ),
+    path(
+    'api/analytics/',
+    include('analytics.urls')
+),
     
     
 ]
