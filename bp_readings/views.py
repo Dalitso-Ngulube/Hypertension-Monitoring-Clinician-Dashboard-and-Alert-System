@@ -1,51 +1,21 @@
-from rest_framework import generics
-
+from rest_framework import generics, permissions
 from .models import BPReading
 from .serializers import BPReadingSerializer
-from alerts.models import Alert
-from .utils import classify_bp
-
+from core.services import handle_bp_reading_created
+from core.permissions import IsOwnerOrReadOnly
 
 class BPReadingListCreateView(generics.ListCreateAPIView):
-    queryset = BPReading.objects.all()
     serializer_class = BPReadingSerializer
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
+
+    def get_queryset(self):
+        return BPReading.objects.filter(patient__user=self.request.user)
 
     def perform_create(self, serializer):
         reading = serializer.save()
-    
+        handle_bp_reading_created(reading)
 
-        systolic = reading.systolic
-        diastolic = reading.diastolic
-
-        print("VIEW TRIGGERED")
-        print(systolic, diastolic)
-
-    
-        risk = classify_bp(systolic, diastolic)
-
-        # CRISIS case from classifier
-        if risk == "CRISIS":
-            Alert.objects.create(
-                patient=reading.patient,
-                severity="CRITICAL",
-                message=f"Crisis BP detected ({systolic}/{diastolic})"
-            )
-
-        # fallback rule-based logic 
-        elif systolic >= 180 or diastolic >= 120:
-            Alert.objects.create(
-                patient=reading.patient,
-                severity="CRITICAL",
-                message=f"Critical BP reading detected: {systolic}/{diastolic}"
-            )
-
-        elif systolic >= 140 or diastolic >= 90:
-            Alert.objects.create(
-                patient=reading.patient,
-                severity="HIGH",
-                message=f"High BP reading detected: {systolic}/{diastolic}"
-            )
-            
 class BPReadingDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = BPReading.objects.all()
-    serializer_class = BPReadingSerializer            
+    serializer_class = BPReadingSerializer
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
