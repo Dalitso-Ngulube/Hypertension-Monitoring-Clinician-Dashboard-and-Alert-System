@@ -5,6 +5,28 @@ from django.db.models import Q, Count
 from bp_readings.models import BPReading
 from patients.models import Patient
 
+
+
+class PatientTrendView(APIView):
+        permission_classes = [IsAuthenticated]
+
+        def get(self, request, patient_id):
+            readings = BPReading.objects.filter(
+                patient_id=patient_id,
+                patient__user=request.user
+            ).order_by('recorded_at')
+
+            data = [
+                {
+                    "date": reading.recorded_at,
+                    "systolic": reading.systolic,
+                    "diastolic": reading.diastolic,
+                    "risk_category": reading.risk_category,
+                }
+                for reading in readings
+            ]
+
+            return Response(data)
 class AnalyticsSummaryView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -30,3 +52,5 @@ class RiskDistributionView(APIView):
             patient__user=request.user
         ).values('risk_category').annotate(count=Count('id'))
         return Response({item['risk_category']: item['count'] for item in distribution})
+    
+   
