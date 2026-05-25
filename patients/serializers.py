@@ -17,4 +17,6 @@ class PatientSerializer(serializers.ModelSerializer):
             'address',
             'created_at',
             'updated_at',
+            'user',
         ]
+        read_only_fields = ('user',)
