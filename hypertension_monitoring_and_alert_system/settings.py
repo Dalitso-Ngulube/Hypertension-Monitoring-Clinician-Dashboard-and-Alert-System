@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     'alerts',
     'analytics',
     'reports',
+    'dashboard',
 ]
 
 MIDDLEWARE = [
@@ -67,6 +68,11 @@ DATABASES = {
     }
 }
 
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/dashboard/'
+LOGOUT_REDIRECT_URL = '/login/'
+
+
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
@@ -85,6 +91,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 # DRF + JWT
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
