@@ -14,12 +14,18 @@ class Patient(models.Model):
         blank=True,
         related_name='patient'
     )
-
+    clinician = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='patients'
+    )
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
-    age = models.PositiveIntegerField()
+    age = models.PositiveIntegerField(default = 0)
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, blank=True, null=True)
-    phone_number = models.CharField(max_length=20, blank=True, null=True)
+    phone_number = models.CharField(max_length=50, blank=True, null=True)
     address = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -27,4 +33,4 @@ class Patient(models.Model):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}" or f"Patient {self.id}"
-    
+      
