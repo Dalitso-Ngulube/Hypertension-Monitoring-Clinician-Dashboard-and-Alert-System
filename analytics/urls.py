@@ -3,6 +3,7 @@ from .views import (
     PatientTrendView,
     AnalyticsSummaryView,
     RiskDistributionView,
+    RiskScoreView,  BPTrendView
 )
 
 urlpatterns = [
@@ -12,6 +13,7 @@ urlpatterns = [
         PatientTrendView.as_view(),
         name='patient-trend'
     ),
+    path('trends/<int:patient_id>/', BPTrendView.as_view(), name='bp-trend'),
 
     path(
         'summary/',
@@ -24,4 +26,5 @@ urlpatterns = [
         RiskDistributionView.as_view(),
         name='risk-distribution'
     ),
+    path('risk-score/<int:patient_id>/', RiskScoreView.as_view(), name='risk-score'),
 ]
