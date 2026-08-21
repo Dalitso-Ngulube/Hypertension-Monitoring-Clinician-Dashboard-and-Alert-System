@@ -20,3 +20,8 @@ class BPReadingSerializer(serializers.ModelSerializer):
         if diastolic < 30 or diastolic > 200:
             raise serializers.ValidationError("Diastolic must be between 30 and 200.")
         return data
+
+class PatientAddReadingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BPReading
+        fields = ['systolic', 'diastolic', 'pulse_rate']

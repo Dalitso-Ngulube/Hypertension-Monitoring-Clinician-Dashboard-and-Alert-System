@@ -1,9 +1,11 @@
 from rest_framework import generics, permissions
 from rest_framework.exceptions import PermissionDenied
 from .models import BPReading
+from .serializers import BPReadingSerializer, PatientAddReadingSerializer  # ← import the new serializer
+from patients.models import Patient
 from alerts.models import Alert
 from accounts.permissions import IsOwnerOrClinician
-from .serializers import BPReadingSerializer
+
 
 class BPReadingListCreateView(generics.ListCreateAPIView):
     serializer_class = BPReadingSerializer
@@ -22,7 +24,6 @@ class BPReadingListCreateView(generics.ListCreateAPIView):
         user = self.request.user
         patient = serializer.validated_data.get('patient')
 
-        # Validate patient ownership
         if user.role == 'admin':
             pass
         elif user.role == 'clinician':
@@ -34,7 +35,6 @@ class BPReadingListCreateView(generics.ListCreateAPIView):
 
         reading = serializer.save()
 
-        # Create alert only if not already unresolved
         if reading.risk_category in ['CRISIS', 'STAGE_2']:
             Alert.objects.get_or_create(
                 patient=reading.patient,
@@ -51,3 +51,43 @@ class BPReadingDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = BPReading.objects.all()
     serializer_class = BPReadingSerializer
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrClinician]
+
+
+class PatientAddReadingView(generics.CreateAPIView):
+    """
+    Allow a patient to add their own BP reading.
+    They must be logged in and have a patient record.
+    """
+    serializer_class = PatientAddReadingSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        if user.role != 'patient':
+            raise PermissionDenied("Only patients can add readings here.")
+
+        try:
+            patient = Patient.objects.get(user=user)
+        except Patient.DoesNotExist:
+            raise PermissionDenied("You do not have a patient profile.")
+
+        # Create the reading manually
+        reading = BPReading(
+            patient=patient,
+            systolic=serializer.validated_data['systolic'],
+            diastolic=serializer.validated_data['diastolic'],
+            pulse_rate=serializer.validated_data.get('pulse_rate'),
+            source='MANUAL'
+        )
+        reading.save()
+
+        if reading.risk_category in ['CRISIS', 'STAGE_2']:
+            Alert.objects.get_or_create(
+                patient=reading.patient,
+                is_resolved=False,
+                alert_type='BP_CRITICAL',
+                defaults={
+                    'severity': 'CRITICAL' if reading.risk_category == 'CRISIS' else 'HIGH',
+                    'message': f"{reading.risk_category} reading: {reading.systolic}/{reading.diastolic} at {reading.recorded_at}",
+                }
+            )
