@@ -25,7 +25,6 @@ urlpatterns = [
     path('api/auth/', include('accounts.urls')),
     path('api/auth/token/', TokenObtainPairView.as_view(), ),
     path('api/auth/token/refresh/', TokenRefreshView.as_view(), ),
-    path('dashboard/', include('dashboard.urls')),
-    path('', include('dashboard.urls')),
-    path('api/auth/', include('accounts.urls')),
+    path('api/appointments/', include('appointments.urls')),
 ]
+
