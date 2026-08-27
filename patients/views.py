@@ -1,4 +1,5 @@
 from rest_framework import generics, permissions
+from django.shortcuts import get_object_or_404
 from rest_framework.exceptions import PermissionDenied
 from .models import Patient, PatientMedicalHistory, MedicalCondition, Allergy, Medication
 from .serializers import (
@@ -40,9 +41,13 @@ class PatientMedicalHistoryView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         patient_id = self.kwargs.get('patient_id')
-        patient = Patient.objects.get(id=patient_id)
+        patient = get_object_or_404(Patient, id=patient_id)
         history, created = PatientMedicalHistory.objects.get_or_create(patient=patient)
+
         return history
+    def update(self, request, *args, **kwargs):
+        kwargs['partial'] = True
+        return super().update(request, *args, **kwargs)
 
 
 class MedicalConditionListView(generics.ListAPIView):

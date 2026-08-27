@@ -1,5 +1,3 @@
-# patients/serializers.py
-
 from rest_framework import serializers
 from .models import (
     Patient, MedicalCondition, Allergy, Medication,
@@ -16,6 +14,7 @@ class PatientSerializer(serializers.ModelSerializer):
             'user', 'clinician'
         ]
         read_only_fields = ('user', 'created_at', 'updated_at')
+
 
 # Medical History Serializers
 
@@ -92,10 +91,35 @@ class PatientMedicalHistorySerializer(serializers.ModelSerializer):
             'family_history_heart_disease',
             'family_history_stroke',
             'family_history_notes',
+            'bmi',
             'created_at',
             'updated_at',
         ]
         read_only_fields = ['patient', 'created_at', 'updated_at']
+        extra_kwargs = {
+            'condition_notes': {'required': False},
+            'allergy_notes': {'required': False},
+            'current_medication_notes': {'required': False},
+            'has_diabetes': {'required': False},
+            'has_kidney_disease': {'required': False},
+            'has_heart_disease': {'required': False},
+            'has_stroke_history': {'required': False},
+            'comorbidity_notes': {'required': False},
+            'emergency_name': {'required': False},
+            'emergency_phone': {'required': False},
+            'emergency_relationship': {'required': False},
+            'smoking_status': {'required': False},
+            'smoking_pack_years': {'required': False},
+            'alcohol_consumption': {'required': False},
+            'physical_activity': {'required': False},
+            'diet_description': {'required': False},
+            'family_history_hypertension': {'required': False},
+            'family_history_diabetes': {'required': False},
+            'family_history_heart_disease': {'required': False},
+            'family_history_stroke': {'required': False},
+            'family_history_notes': {'required': False},
+            'bmi': {'required': False},
+        }
 
     def update(self, instance, validated_data):
         # Handle many-to-many relationships
@@ -117,16 +141,6 @@ class PatientMedicalHistorySerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
-class PatientSerializer(serializers.ModelSerializer):
-    """Basic patient serializer (for list views)"""
-    class Meta:
-        model = Patient
-        fields = [
-            'id', 'first_name', 'last_name', 'age', 'gender',
-            'phone_number', 'address', 'created_at', 'updated_at',
-            'user', 'clinician'
-        ]
-        read_only_fields = ('user', 'created_at', 'updated_at')
 
 
 class PatientDetailSerializer(serializers.ModelSerializer):
@@ -148,3 +162,4 @@ class PatientDetailSerializer(serializers.ModelSerializer):
             'updated_at',
             'medical_history',
         ]
+        

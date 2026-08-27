@@ -43,6 +43,9 @@ class Patient(models.Model):
     def __str__(self):
         return f"{self.first_name} {self.last_name}" or f"Patient {self.id}"
 
+    class Meta:
+        ordering = ['-created_at']
+
 
 class MedicalCondition(models.Model):
     """Pre-defined medical conditions for selection"""
@@ -194,9 +197,6 @@ class PatientMedicalHistory(models.Model):
     family_history_stroke = models.BooleanField(default=False)
     family_history_notes = models.TextField(blank=True)
 
-    # ============================================================
-    # NEW: BMI Field (for direct entry or computed override)
-    # ============================================================
     bmi = models.DecimalField(
         max_digits=5,
         decimal_places=1,
@@ -205,7 +205,6 @@ class PatientMedicalHistory(models.Model):
         help_text="Body Mass Index (kg/m²). If not provided, it will be computed from height/weight."
     )
 
-    # Metadata
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
