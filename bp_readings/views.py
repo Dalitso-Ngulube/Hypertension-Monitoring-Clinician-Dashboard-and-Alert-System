@@ -1,7 +1,7 @@
 from rest_framework import generics, permissions
 from rest_framework.exceptions import PermissionDenied
 from .models import BPReading
-from .serializers import BPReadingSerializer, PatientAddReadingSerializer  # ← import the new serializer
+from .serializers import BPReadingSerializer, PatientAddReadingSerializer
 from patients.models import Patient
 from alerts.models import Alert
 from accounts.permissions import IsOwnerOrClinician
@@ -13,12 +13,22 @@ class BPReadingListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
+        queryset = BPReading.objects.all()
+
+        # 1. Role‑based base filtering
         if user.role == 'admin':
-            return BPReading.objects.all()
+            queryset = BPReading.objects.all()
         elif user.role == 'clinician':
-            return BPReading.objects.filter(patient__clinician=user)
+            queryset = BPReading.objects.filter(patient__clinician=user)
         else:  # patient
-            return BPReading.objects.filter(patient__user=user)
+            queryset = BPReading.objects.filter(patient__user=user)
+
+        # 2. Filter by specific patient ID (from query param)
+        patient_id = self.request.query_params.get('patient')
+        if patient_id:
+            queryset = queryset.filter(patient_id=patient_id)
+
+        return queryset
 
     def perform_create(self, serializer):
         user = self.request.user
@@ -71,7 +81,6 @@ class PatientAddReadingView(generics.CreateAPIView):
         except Patient.DoesNotExist:
             raise PermissionDenied("You do not have a patient profile.")
 
-        # Create the reading manually
         reading = BPReading(
             patient=patient,
             systolic=serializer.validated_data['systolic'],
