@@ -2,9 +2,10 @@ import factory
 from factory.django import DjangoModelFactory
 from factory import Faker, SubFactory, post_generation
 from django.contrib.auth import get_user_model
-from patients.models import Patient
+from patients.models import Patient, PatientMedicalHistory
 from bp_readings.models import BPReading
 from alerts.models import Alert
+from appointments.models import Appointment
 
 User = get_user_model()
 
@@ -33,10 +34,20 @@ class PatientFactory(DjangoModelFactory):
         skip_postgeneration_save = True
 
     user = SubFactory(UserFactory)
-    clinician = SubFactory(ClinicianFactory)   
+    clinician = SubFactory(ClinicianFactory)
     first_name = Faker('first_name')
     last_name = Faker('last_name')
-    
+    age = Faker('random_int', min=18, max=90)
+
+class PatientMedicalHistoryFactory(DjangoModelFactory):
+    class Meta:
+        model = PatientMedicalHistory
+
+    patient = SubFactory(PatientFactory)
+    smoking_status = 'NEVER'
+    alcohol_consumption = 'NONE'
+    physical_activity = 'SEDENTARY'
+    bmi = 24.0
 
 class BPReadingFactory(DjangoModelFactory):
     class Meta:
@@ -49,7 +60,6 @@ class BPReadingFactory(DjangoModelFactory):
     pulse_rate = Faker('random_int', min=50, max=120)
     source = 'MANUAL'
 
-
 class AlertFactory(DjangoModelFactory):
     class Meta:
         model = Alert
@@ -60,3 +70,15 @@ class AlertFactory(DjangoModelFactory):
     severity = 'HIGH'
     message = Faker('sentence')
     is_resolved = False
+
+class AppointmentFactory(DjangoModelFactory):
+    class Meta:
+        model = Appointment
+
+    patient = SubFactory(PatientFactory)
+    clinician = SubFactory(ClinicianFactory)
+    date = Faker('date_this_year')
+    time = Faker('time')
+    duration = 30
+    reason = Faker('sentence')
+    status = 'SCHEDULED'

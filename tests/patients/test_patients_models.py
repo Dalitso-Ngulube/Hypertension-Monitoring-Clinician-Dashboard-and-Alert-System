@@ -1,5 +1,6 @@
 import pytest
-from tests.factories import PatientFactory, UserFactory
+from decimal import Decimal
+from tests.factories import PatientFactory
 
 pytestmark = pytest.mark.django_db
 
@@ -11,3 +12,7 @@ class TestPatientModel:
     def test_auto_primary_key(self):
         patient = PatientFactory()
         assert patient.id is not None
+
+    def test_bmi_property(self):
+        patient = PatientFactory(height=Decimal('1.75'), weight=Decimal('70'))
+        assert float(patient.bmi) == 22.9
