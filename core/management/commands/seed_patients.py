@@ -40,26 +40,16 @@ LAST_NAMES = [
     'Mwale', 'Bwalya', 'Kaluba', 'Mushiba', 'Chilufya', 'Mukuka',
     'Mpundu', 'Ngoma', 'Chibwe', 'Kasonde', 'Mukwato', 'Chishimba',
     'Miti', 'Sinkala', 'Mushinge', 'Musonda', 'Chitambo', 'Moyo',
-    'Mwansa', 'Nkhoma', 'Kabwe', 'Mukwala', 'Simwanza', 'Mwanakatwe',
+    'Nkhoma', 'Kabwe', 'Mukwala', 'Simwanza', 'Mwanakatwe',
     'Chikwanda', 'Mwakalombe', 'Mushota', 'Kapindula', 'Nyirenda',
-    'Mwamba', 'Chisanga', 'Mumba', 'Chileshe', 'Mukosha', 'Tembo',
-    'Mweemba', 'Mwiinga', 'Sichilima', 'Mukonka', 'Chansa', 'Hachamba',
+    'Mwamba', 'Chisanga', 'Chileshe', 'Mukosha', 'Mweemba',
+    'Mwiinga', 'Sichilima', 'Mukonka', 'Chansa', 'Hachamba',
     'Mwanawasa', 'Mambilima', 'Chimumbwa', 'Muyunda', 'Chitambala',
-    'Mukwato', 'Simutowe', 'Mwanakatwe', 'Mushala', 'Kalinga',
-    'Mulonda', 'Mwila', 'Chivunda', 'Muyenga', 'Kapembwa',
-    'Simpasa', 'Mukena', 'Chomba', 'Sikapizye', 'Mwanza',
-    'Banda', 'Mwansa', 'Mulenga', 'Mwanza', 'Tembo', 'Mwape',
-    # Added more common ones
-    'Zulu', 'Mthembu', 'Dlamini', 'Mbeki', 'Ndlovu',
-    'Moyo', 'Ncube', 'Sibanda', 'Mkhize', 'Mhlongo',
-    'Ngulube', 'Mwila', 'Mukuka', 'Kalunga', 'Chinoyi'
-]
-
-ZAMBIAN_TOWNS = [
-    'Lusaka', 'Kitwe', 'Ndola', 'Livingstone', 'Chipata', 'Kabwe',
-    'Mufulira', 'Chingola', 'Luanshya', 'Mongu', 'Kasama', 'Solwezi',
-    'Mansa', 'Mbala', 'Mpika', 'Choma', 'Mazabuka', 'Kafue',
-    'Siavonga', 'Petauke', 'Lundazi', 'Chinsali', 'Mumbwa', 'Kapiri Mposhi'
+    'Simutowe', 'Mushala', 'Kalinga', 'Mulonda',
+    'Chivunda', 'Muyenga', 'Kapembwa', 'Simpasa', 'Mukena',
+    'Chomba', 'Sikapizye', 'Zulu', 'Mthembu', 'Dlamini',
+    'Ndlovu', 'Ncube', 'Sibanda', 'Mkhize', 'Mhlongo',
+    'Ngulube', 'Kalunga', 'Chinoyi'
 ]
 
 STREET_NAMES = [
@@ -70,7 +60,7 @@ STREET_NAMES = [
 ]
 
 class Command(BaseCommand):
-    help = 'Generates simulated patient data with Zambian names for testing.'
+    help = 'Generates simulated patient data with Zambian names and 3-5 BP readings each.'
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -90,13 +80,26 @@ class Command(BaseCommand):
             action='store_true',
             help='Clear existing patients and readings before seeding'
         )
+        parser.add_argument(
+            '--readings',
+            type=int,
+            default=0,
+            help='Exact number of readings per patient (default: random 3-5)'
+        )
+        parser.add_argument(
+            '--days',
+            type=int,
+            default=30,
+            help='Maximum age of readings in days (default: 30)'
+        )
 
     def handle(self, *args, **options):
         count = options['count']
         clinician_username = options['clinician']
         clear_existing = options['clear']
+        specified_readings = options['readings']
+        days = options['days']
 
-        # Clear if requested
         if clear_existing:
             self.stdout.write('Clearing existing patients, readings, and alerts...')
             Patient.objects.all().delete()
@@ -104,7 +107,6 @@ class Command(BaseCommand):
             Alert.objects.all().delete()
             self.stdout.write(self.style.SUCCESS('Cleared.'))
 
-        # Get or create clinician
         clinician, created = User.objects.get_or_create(
             username=clinician_username,
             defaults={
@@ -128,9 +130,6 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING('No medical conditions found. Run seed_medical_data first.'))
             return
 
-        start_date = timezone.now() - timedelta(days=30)
-        end_date = timezone.now()
-
         patients_created = 0
         total_readings = 0
 
@@ -139,12 +138,10 @@ class Command(BaseCommand):
             last_name = random.choice(LAST_NAMES)
             age = random.randint(25, 85)
             gender = random.choice(['M', 'F'])
-            phone = f'096{random.randint(1000000, 9999999)}'  # Zambian mobile format
-            town = random.choice(ZAMBIAN_TOWNS)
+            phone = f'096{random.randint(1000000, 9999999)}'
             street = random.choice(STREET_NAMES)
-            address = f"{random.randint(1, 999)} {street} {town}"
+            address = f"{random.randint(1, 999)} {street} Lusaka"   # All patients in Lusaka
 
-            # Height (m) and weight (kg) for BMI
             height = round(random.uniform(1.50, 1.95), 2)
             weight = round(random.uniform(50, 120), 1)
 
@@ -160,31 +157,25 @@ class Command(BaseCommand):
                 weight=weight,
             )
 
-            # Create medical history
-            history = PatientMedicalHistory.objects.create(patient=patient)
+            history, _ = PatientMedicalHistory.objects.get_or_create(patient=patient)
 
-            # Add random conditions (1-3)
             if conditions:
                 selected_conditions = random.sample(conditions, random.randint(1, 3))
                 history.conditions.add(*selected_conditions)
 
-            # Add random allergies (0-2)
             if allergies and random.random() < 0.4:
                 selected_allergies = random.sample(allergies, random.randint(1, 2))
                 history.allergies.add(*selected_allergies)
 
-            # Add random medications (1-2)
             if medications:
                 selected_meds = random.sample(medications, random.randint(1, 2))
                 history.current_medications.add(*selected_meds)
 
-            # Comorbidities
             history.has_diabetes = random.random() < 0.2
             history.has_kidney_disease = random.random() < 0.1
             history.has_heart_disease = random.random() < 0.15
             history.has_stroke_history = random.random() < 0.05
 
-            # Lifestyle
             smoking_options = ['NEVER', 'FORMER', 'CURRENT']
             history.smoking_status = random.choice(smoking_options)
             if history.smoking_status == 'CURRENT':
@@ -212,54 +203,58 @@ class Command(BaseCommand):
                 history.bmi = round(bmi, 1)
             history.save()
 
-            current_date = start_date
-            while current_date <= end_date:
-                readings_per_day = random.randint(1, 3)
-                for _ in range(readings_per_day):
-                    rand = random.random()
-                    if rand < 0.50:
-                        systolic = random.randint(105, 130)
-                        diastolic = random.randint(65, 82)
-                    elif rand < 0.75:
-                        systolic = random.randint(125, 150)
-                        diastolic = random.randint(78, 92)
-                    elif rand < 0.90:
-                        systolic = random.randint(140, 170)
-                        diastolic = random.randint(90, 108)
-                    else:
-                        systolic = random.randint(180, 220)
-                        diastolic = random.randint(110, 135)
+            if specified_readings:
+                num_readings = specified_readings
+            else:
+                num_readings = random.randint(3, 5)
 
-                    pulse = random.randint(60, 100)
+            for _ in range(num_readings):
+                rand = random.random()
+                if rand < 0.50:
+                    systolic = random.randint(105, 130)
+                    diastolic = random.randint(65, 82)
+                elif rand < 0.75:
+                    systolic = random.randint(125, 150)
+                    diastolic = random.randint(78, 92)
+                elif rand < 0.90:
+                    systolic = random.randint(140, 170)
+                    diastolic = random.randint(90, 108)
+                else:
+                    systolic = random.randint(180, 220)
+                    diastolic = random.randint(110, 135)
 
-                    random_time = current_date + timedelta(
-                        hours=random.randint(6, 20),
-                        minutes=random.randint(0, 59)
-                    )
+                pulse = random.randint(60, 100)
+                offset = random.randint(0, days)
+                random_time = timezone.now() - timedelta(days=offset)
+                random_time = random_time.replace(
+                    hour=random.randint(6, 20),
+                    minute=random.randint(0, 59),
+                    second=0,
+                    microsecond=0
+                )
 
-                    BPReading.objects.create(
-                        patient=patient,
-                        systolic=systolic,
-                        diastolic=diastolic,
-                        pulse_rate=pulse,
-                        recorded_at=random_time,
-                        source=random.choice(['MANUAL', 'API', 'DEVICE']),
-                    )
-                    total_readings += 1
-                current_date += timedelta(days=1)
+                BPReading.objects.create(
+                    patient=patient,
+                    systolic=systolic,
+                    diastolic=diastolic,
+                    pulse_rate=pulse,
+                    recorded_at=random_time,
+                    source='MANUAL',
+                )
+                total_readings += 1
 
             patients_created += 1
             if patients_created % 20 == 0:
                 self.stdout.write(f'   Generated {patients_created}/{count} patients...')
 
-        self.stdout.write(self.style.SUCCESS('\n Seeding complete!'))
-        self.stdout.write(f'    Patients created: {patients_created}')
-        self.stdout.write(f'    Total readings: {total_readings}')
-        self.stdout.write(f'    Average readings per patient: {total_readings / patients_created if patients_created else 0:.1f}')
+        self.stdout.write(self.style.SUCCESS('\nSeeding complete!'))
+        self.stdout.write(f'   Patients created: {patients_created}')
+        self.stdout.write(f'   Total readings: {total_readings}')
+        self.stdout.write(f'   Average readings per patient: {total_readings / patients_created if patients_created else 0:.1f}')
 
         alerts_count = Alert.objects.count()
-        self.stdout.write(f'    Total alerts generated: {alerts_count}')
+        self.stdout.write(f'   Total alerts generated: {alerts_count}')
 
-        self.stdout.write('\n Login credentials:')
+        self.stdout.write('\nLogin credentials:')
         self.stdout.write(f'   Username: {clinician_username}')
         self.stdout.write(f'   Password: testpass123')
