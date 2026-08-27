@@ -26,7 +26,7 @@ class WHORiskScore:
         
         # Risk factors
         smoker = history.smoking_status == 'CURRENT' if history else False
-        diabetic = (history.has_diabetes or history.has_diabetes_treatment) if history else False
+        diabetic = history.has_diabetes if history else False
     
         bmi = None
         bmi_source = None
