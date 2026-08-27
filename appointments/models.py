@@ -29,3 +29,6 @@ class Appointment(models.Model):
 
     def __str__(self):
         return f"{self.patient.first_name} {self.patient.last_name} - {self.date} {self.time}"
+
+    class Meta:
+        ordering = ['-created_at']
