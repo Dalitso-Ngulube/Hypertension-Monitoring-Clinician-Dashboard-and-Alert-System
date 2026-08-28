@@ -12,9 +12,19 @@ import {
   Title,
   Tooltip,
   Legend,
+  Filler,
 } from 'chart.js';
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+);
 
 const PatientDashboard = () => {
   const { user, logout } = useContext(AuthContext);
@@ -90,7 +100,6 @@ const PatientDashboard = () => {
 
   return (
     <div className="container-fluid py-4" style={{ minHeight: '100vh', backgroundColor: 'var(--bg-body)' }}>
-      {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h1 className="h2 fw-bold">My Health Dashboard</h1>
@@ -101,7 +110,6 @@ const PatientDashboard = () => {
         </button>
       </div>
 
-      {/* Stats Cards */}
       <div className="row g-3 mb-4">
         <div className="col-6 col-md-3">
           <div className="stat-card">
@@ -153,7 +161,6 @@ const PatientDashboard = () => {
         </div>
       </div>
 
-      {/* Chart Card */}
       <div className="card card-clinical mb-4">
         <div className="card-header">Blood Pressure Trend</div>
         <div className="card-body">
@@ -173,7 +180,6 @@ const PatientDashboard = () => {
         <Plus size={24} />
       </button>
 
-      {/* Add Reading Modal */}
       {showModal && (
         <div
           className="modal show d-block"

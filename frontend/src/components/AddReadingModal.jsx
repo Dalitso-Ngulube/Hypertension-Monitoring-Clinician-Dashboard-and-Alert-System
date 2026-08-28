@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import api from '../api/axiosConfig';
 import { X, Plus } from 'lucide-react';
 
-const AddReadingModal = ({ patientId, onReadingAdded }) => {
+const AddReadingModal = ({ patientId, patientName, onReadingAdded }) => {
   const [show, setShow] = useState(false);
   const [formData, setFormData] = useState({
     systolic: '',
@@ -28,7 +28,6 @@ const AddReadingModal = ({ patientId, onReadingAdded }) => {
         diastolic: parseInt(formData.diastolic),
         pulse_rate: formData.pulse_rate ? parseInt(formData.pulse_rate) : null,
       };
-
       await api.post('/bp_readings/', payload);
       setShow(false);
       setFormData({ systolic: '', diastolic: '', pulse_rate: '' });
@@ -66,18 +65,14 @@ const AddReadingModal = ({ patientId, onReadingAdded }) => {
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Add Blood Pressure Reading</h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setShow(false)}
-                />
+                <h5 className="modal-title">
+                  Add Blood Pressure Reading {patientName && `for ${patientName}`}
+                </h5>
+                <button className="btn-close" onClick={() => setShow(false)} />
               </div>
               <form onSubmit={handleSubmit}>
                 <div className="modal-body">
-                  {error && (
-                    <div className="alert alert-danger py-1 small">{error}</div>
-                  )}
+                  {error && <div className="alert alert-danger py-1 small">{error}</div>}
                   <div className="mb-3">
                     <label className="form-label">Systolic (mmHg)</label>
                     <input
@@ -121,18 +116,10 @@ const AddReadingModal = ({ patientId, onReadingAdded }) => {
                   </div>
                 </div>
                 <div className="modal-footer">
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={() => setShow(false)}
-                  >
+                  <button type="button" className="btn btn-secondary" onClick={() => setShow(false)}>
                     Cancel
                   </button>
-                  <button
-                    type="submit"
-                    className="btn btn-primary"
-                    disabled={loading}
-                  >
+                  <button type="submit" className="btn btn-primary" disabled={loading}>
                     {loading ? 'Saving...' : 'Add Reading'}
                   </button>
                 </div>

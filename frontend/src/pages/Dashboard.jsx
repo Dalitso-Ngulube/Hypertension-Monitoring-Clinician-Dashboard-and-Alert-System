@@ -42,29 +42,30 @@ const Dashboard = () => {
 
   // Fetch patient data whenever selectedPatient changes
   useEffect(() => {
-  const fetchPatientData = async () => {
-    if (!selectedPatient) return;
-    try {
-      console.log(' Fetching data for patient:', selectedPatient);
-      const [detailsRes, readingsRes] = await Promise.all([
-        api.get(`/patients/${selectedPatient}/`),
-        api.get(`/bp_readings/?patient=${selectedPatient}`)
-      ]);
-      console.log(' Patient details:', detailsRes.data);
-      console.log(' Readings response:', readingsRes.data);
-      
-      setPatientDetails(detailsRes.data);
-      const readings = readingsRes.data.results || [];
-      console.log(' Readings array:', readings);
-      setPatientReadings(readings);
-      setLatestReading(readings.length > 0 ? readings[0] : null);
-      console.log(' Latest reading set:', readings[0] || null);
-    } catch (err) {
-      console.error(' Error fetching patient data:', err);
-    }
-  };
-  fetchPatientData();
-}, [selectedPatient]);
+    const fetchPatientData = async () => {
+      if (!selectedPatient) return;
+      try {
+        console.log('Fetching data for patient:', selectedPatient);
+        const [detailsRes, readingsRes] = await Promise.all([
+          api.get(`/patients/${selectedPatient}/`),
+          api.get(`/bp_readings/?patient=${selectedPatient}`)
+        ]);
+        console.log('Patient details:', detailsRes.data);
+        console.log('Readings response:', readingsRes.data);
+        
+        setPatientDetails(detailsRes.data);
+        const readings = readingsRes.data.results || [];
+        console.log('Readings array:', readings);
+        setPatientReadings(readings);
+        setLatestReading(readings.length > 0 ? readings[0] : null);
+        console.log('Latest reading set:', readings[0] || null);
+      } catch (err) {
+        console.error('Error fetching patient data:', err);
+      }
+    };
+    fetchPatientData();
+  }, [selectedPatient]);
+
   // Compute stats from selected patient's readings
   const totalReadings = patientReadings.length;
   const totalPatients = patients.length;
@@ -106,7 +107,7 @@ const Dashboard = () => {
 
       <div className="row g-3 mb-4">
         {[
-          { icon: Users, label: 'Patients', value: totalPatients ? totalPatients : 0, color: 'primary' },
+          { icon: Users, label: 'Patients', value: totalPatients || 0, color: 'primary' },
           { icon: Activity, label: 'Readings', value: totalReadings, color: 'success' },
           { icon: AlertTriangle, label: 'High Alerts', value: highAlerts, color: 'warning' },
           { icon: HeartPulse, label: 'Crisis', value: crisisReadings, color: 'danger' },
@@ -142,7 +143,6 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* PatientInfoCard with a key that changes with the patient */}
           <PatientInfoCard
             key={`${selectedPatient}-${latestReading?.id || ''}`}
             patient={patientDetails}

@@ -5,7 +5,7 @@ import Layout from './components/Layout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Patients from './pages/Patients';
-import PatientDetail from './pages/PatientDetail';
+import PatientDetails from './pages/PatientDetails';
 import Alerts from './pages/Alerts';
 import Analytics from './pages/Analytics';
 import Settings from './pages/Settings';
@@ -71,7 +71,7 @@ const AppContent = () => {
         element={
           <PrivateRoute allowedRoles={['clinician', 'admin']}>
             <Layout>
-              <PatientDetail />
+              <PatientDetails />
             </Layout>
           </PrivateRoute>
         }
