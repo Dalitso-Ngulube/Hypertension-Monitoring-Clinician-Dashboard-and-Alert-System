@@ -1,3 +1,4 @@
+import os
 import random
 from datetime import timedelta
 from django.core.management.base import BaseCommand
@@ -100,6 +101,9 @@ class Command(BaseCommand):
         specified_readings = options['readings']
         days = options['days']
 
+        # Get password from environment variable or use a sensible default
+        demo_password = os.getenv('DEMO_PASSWORD', 'Demo@2024!')
+
         if clear_existing:
             self.stdout.write('Clearing existing patients, readings, and alerts...')
             Patient.objects.all().delete()
@@ -116,11 +120,16 @@ class Command(BaseCommand):
             }
         )
         if created:
-            clinician.set_password('testpass123')
+            clinician.set_password(demo_password)
             clinician.save()
-            self.stdout.write(self.style.SUCCESS(f'Created clinician: {clinician_username} (password: testpass123)'))
+            self.stdout.write(self.style.SUCCESS(
+                f'Created clinician: {clinician_username} (password: {demo_password})'
+            ))
         else:
             self.stdout.write(f'Using existing clinician: {clinician_username}')
+            # Optionally update password if you want to enforce the new one
+            clinician.set_password(demo_password)
+            clinician.save()
 
         conditions = list(MedicalCondition.objects.all())
         allergies = list(Allergy.objects.all())
@@ -140,7 +149,7 @@ class Command(BaseCommand):
             gender = random.choice(['M', 'F'])
             phone = f'096{random.randint(1000000, 9999999)}'
             street = random.choice(STREET_NAMES)
-            address = f"{random.randint(1, 999)} {street} Lusaka"   # All patients in Lusaka
+            address = f"{random.randint(1, 999)} {street} Lusaka"
 
             height = round(random.uniform(1.50, 1.95), 2)
             weight = round(random.uniform(50, 120), 1)
@@ -257,4 +266,4 @@ class Command(BaseCommand):
 
         self.stdout.write('\nLogin credentials:')
         self.stdout.write(f'   Username: {clinician_username}')
-        self.stdout.write(f'   Password: testpass123')
+        self.stdout.write(f'   Password: {demo_password}')
