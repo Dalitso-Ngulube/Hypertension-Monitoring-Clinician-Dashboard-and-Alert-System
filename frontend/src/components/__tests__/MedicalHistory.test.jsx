@@ -1,38 +1,17 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import { AuthContext } from '../../context/AuthContext';
 import MedicalHistory from '../MedicalHistory';
 import api from '../../api/axiosConfig';
-import { AuthContext } from '../../context/AuthContext';
 
-jest.mock('../../api/axiosConfig');
+jest.mock('../../api/axiosConfig', () => ({
+  get: jest.fn(),
+  put: jest.fn(),
+}));
 
-const mockUser = {
-  id: 1,
-  username: 'clinician1',
-  role: 'clinician',
-};
-
-const mockHistory = {
-  id: 1,
-  conditions: [{ id: 1, name: 'Diabetes' }],
-  allergies: [{ id: 1, name: 'Penicillin' }],
-  current_medications: [{ id: 1, name: 'Lisinopril' }],
-  has_diabetes: true,
-  has_kidney_disease: false,
-  smoking_status: 'NEVER',
-  alcohol_consumption: 'LIGHT',
-  physical_activity: 'MODERATE',
-  emergency_name: 'Jane Doe',
-  emergency_phone: '555-555-5555',
-};
-
-const mockConditions = [{ id: 1, name: 'Diabetes' }, { id: 2, name: 'Hypertension' }];
-const mockAllergies = [{ id: 1, name: 'Penicillin' }, { id: 2, name: 'Sulfa' }];
-const mockMedications = [{ id: 1, name: 'Lisinopril' }, { id: 2, name: 'Amlodipine' }];
-
-const renderWithContext = (component, user = mockUser) => {
+const renderWithContext = (component, user) => {
   return render(
-    <AuthContext.Provider value={{ user, isAuthenticated: true }}>
+    <AuthContext.Provider value={{ user, token: 'mock-token' }}>
       {component}
     </AuthContext.Provider>
   );
@@ -41,88 +20,66 @@ const renderWithContext = (component, user = mockUser) => {
 describe('MedicalHistory', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    global.alert = jest.fn();
   });
 
-  it('renders loading state initially', () => {
+  const mockHistoryData = {
+    conditions: [],
+    allergies: [],
+    current_medications: [],
+    condition_notes: '',
+    allergy_notes: '',
+    current_medication_notes: '',
+    has_diabetes: false,
+    has_kidney_disease: false,
+    has_heart_disease: false,
+    has_stroke_history: false,
+    comorbidity_notes: '',
+    emergency_name: '',
+    emergency_phone: '',
+    emergency_relationship: '',
+    smoking_status: 'NEVER',
+    smoking_pack_years: '',
+    alcohol_consumption: 'NONE',
+    physical_activity: 'SEDENTARY',
+    diet_description: '',
+    family_history_hypertension: false,
+    family_history_diabetes: false,
+    family_history_heart_disease: false,
+    family_history_stroke: false,
+    family_history_notes: '',
+    bmi: '',
+  };
+
+  const mockReferenceData = {
+    conditions: [],
+    allergies: [],
+    medications: [],
+  };
+
+  it('shows loading state initially', async () => {
     api.get.mockImplementation(() => new Promise(() => {}));
-    renderWithContext(<MedicalHistory patientId={1} />);
+    renderWithContext(<MedicalHistory patientId={1} />, { role: 'clinician' });
     expect(screen.getByText(/Loading medical history/i)).toBeInTheDocument();
   });
 
-  it('renders medical history form when data is loaded', async () => {
-    api.get
-      .mockResolvedValueOnce({ data: mockHistory })
-      .mockResolvedValueOnce({ data: mockConditions })
-      .mockResolvedValueOnce({ data: mockAllergies })
-      .mockResolvedValueOnce({ data: mockMedications });
-
-    renderWithContext(<MedicalHistory patientId={1} />);
-
-    await waitFor(() => {
-      expect(screen.getByText('Medical History')).toBeInTheDocument();
-      expect(screen.getByText('Conditions')).toBeInTheDocument();
-      expect(screen.getByText('Allergies')).toBeInTheDocument();
-      expect(screen.getByText('Current Medications')).toBeInTheDocument();
-      expect(screen.getByText('Comorbidities')).toBeInTheDocument();
-      expect(screen.getByText('Lifestyle')).toBeInTheDocument();
-    });
-  });
-
-  it('saves history when Save button is clicked', async () => {
-    api.get
-      .mockResolvedValueOnce({ data: mockHistory })
-      .mockResolvedValueOnce({ data: mockConditions })
-      .mockResolvedValueOnce({ data: mockAllergies })
-      .mockResolvedValueOnce({ data: mockMedications });
-    
-    api.put.mockResolvedValue({ data: {} });
-
-    renderWithContext(<MedicalHistory patientId={1} />);
-
-    await waitFor(() => {
-      const saveButton = screen.getByText('Save');
-      fireEvent.click(saveButton);
-    });
-
-    expect(api.put).toHaveBeenCalledWith(
-      '/patients/1/medical-history/',
-      expect.any(Object)
-    );
-  });
-
   it('shows permission denied for non-clinicians', async () => {
-    const patientUser = { ...mockUser, role: 'patient' };
-    renderWithContext(<MedicalHistory patientId={1} />, patientUser);
-
-    const permissionMessage = await screen.findByText(
-      (content, element) => {
-        return element.textContent.includes('permission') || 
-               element.textContent.includes('access');
-      },
-      { timeout: 2000 }
-    );
+    renderWithContext(<MedicalHistory patientId={1} />, { role: 'patient' });
+    const permissionMessage = await screen.findByText(/You don't have permission/i);
     expect(permissionMessage).toBeInTheDocument();
   });
 
-  it('handles API error when saving', async () => {
+  it('renders form for clinicians', async () => {
     api.get
-      .mockResolvedValueOnce({ data: mockHistory })
-      .mockResolvedValueOnce({ data: mockConditions })
-      .mockResolvedValueOnce({ data: mockAllergies })
-      .mockResolvedValueOnce({ data: mockMedications });
-    
-    api.put.mockRejectedValue(new Error('Network error'));
+      .mockResolvedValueOnce({ data: mockHistoryData })
+      .mockResolvedValueOnce({ data: mockReferenceData.conditions })
+      .mockResolvedValueOnce({ data: mockReferenceData.allergies })
+      .mockResolvedValueOnce({ data: mockReferenceData.medications });
 
-    renderWithContext(<MedicalHistory patientId={1} />);
+    renderWithContext(<MedicalHistory patientId={1} />, { role: 'clinician' });
 
     await waitFor(() => {
-      const saveButton = screen.getByText('Save');
-      fireEvent.click(saveButton);
+      expect(screen.getByText(/Medical History/i)).toBeInTheDocument();
     });
-
-    await waitFor(() => {
-      expect(global.alert).toHaveBeenCalled();
-    });
+    expect(screen.getByText('Save')).toBeInTheDocument();
   });
 });

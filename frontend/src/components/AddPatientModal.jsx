@@ -29,7 +29,6 @@ const AddPatientModal = ({ onPatientAdded }) => {
     setError('');
 
     try {
-      // 1. Create the patient
       const patientPayload = {
         first_name: formData.first_name,
         last_name: formData.last_name,
@@ -43,7 +42,6 @@ const AddPatientModal = ({ onPatientAdded }) => {
       const patientResponse = await api.post('/patients/', patientPayload);
       const newPatient = patientResponse.data;
 
-      // 2. If BP fields are provided, add a reading
       if (formData.systolic && formData.diastolic) {
         const readingPayload = {
           patient: newPatient.id,
@@ -54,7 +52,6 @@ const AddPatientModal = ({ onPatientAdded }) => {
         await api.post('/bp_readings/', readingPayload);
       }
 
-      // 3. Close modal, clear form, and notify parent
       setShow(false);
       setFormData({
         first_name: '',
@@ -110,7 +107,6 @@ const AddPatientModal = ({ onPatientAdded }) => {
                     <div className="alert alert-danger py-1 small">{error}</div>
                   )}
                   <div className="row g-3">
-                    {/* Demographics */}
                     <div className="col-md-6">
                       <label className="form-label">First Name</label>
                       <input
@@ -178,7 +174,6 @@ const AddPatientModal = ({ onPatientAdded }) => {
                       />
                     </div>
 
-                    {/* Height & Weight */}
                     <div className="col-md-6">
                       <label className="form-label">Height (m)</label>
                       <input
@@ -204,7 +199,6 @@ const AddPatientModal = ({ onPatientAdded }) => {
                       />
                     </div>
 
-                    {/* BP Reading (optional) */}
                     <div className="col-12">
                       <hr className="my-1" />
                       <label className="fw-semibold small text-muted text-uppercase">

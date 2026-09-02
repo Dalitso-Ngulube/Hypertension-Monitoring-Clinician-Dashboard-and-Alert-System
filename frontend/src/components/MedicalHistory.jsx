@@ -58,14 +58,12 @@ const MedicalHistory = ({ patientId, onUpdate }) => {
           bmi: historyRes.data.bmi || '',
         });
 
-        // Fetch reference data with safe array handling
         const [condRes, allergyRes, medRes] = await Promise.all([
           api.get('/patients/reference/conditions/'),
           api.get('/patients/reference/allergies/'),
           api.get('/patients/reference/medications/'),
         ]);
 
-        // Ensure we extract arrays (handle paginated responses)
         setConditions(
           Array.isArray(condRes.data) ? condRes.data :
           Array.isArray(condRes.data?.results) ? condRes.data.results : []
@@ -80,7 +78,6 @@ const MedicalHistory = ({ patientId, onUpdate }) => {
         );
       } catch (error) {
         console.error('Error fetching medical history:', error);
-        // Set empty arrays on error to prevent crashes
         setConditions([]);
         setAllergies([]);
         setMedications([]);
@@ -88,7 +85,12 @@ const MedicalHistory = ({ patientId, onUpdate }) => {
         setLoading(false);
       }
     };
-    if (patientId && isClinicianOrAdmin) fetchData();
+
+    if (patientId && isClinicianOrAdmin) {
+      fetchData();
+    } else {
+      setLoading(false);
+    }
   }, [patientId, isClinicianOrAdmin]);
 
   const handleSave = async () => {

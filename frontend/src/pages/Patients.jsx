@@ -12,6 +12,7 @@ const Patients = () => {
   const navigate = useNavigate();
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState(null);
@@ -19,11 +20,14 @@ const Patients = () => {
 
   const fetchPatients = async () => {
     setLoading(true);
+    setError(null);
     try {
       const response = await api.get('/patients/');
       setPatients(response.data.results || []);
     } catch (error) {
       console.error('Error fetching patients:', error);
+      setError('Failed to load patients. Please try again.');
+      setPatients([]);
     } finally {
       setLoading(false);
     }
@@ -42,7 +46,6 @@ const Patients = () => {
 
   const handleRefresh = () => setRefreshKey(prev => prev + 1);
 
-  // Detail view...
   if (selectedPatient) {
     return (
       <div className="container-fluid py-4">
@@ -72,7 +75,6 @@ const Patients = () => {
     );
   }
 
-  // List view
   return (
     <div className="container-fluid py-4">
       <div className="d-flex flex-wrap justify-content-between align-items-center mb-4">
@@ -98,11 +100,26 @@ const Patients = () => {
         <span className="input-group-text bg-white border-start-0 text-muted small">{filteredPatients.length} patients</span>
       </div>
 
-      {loading ? (
-        <div className="text-center py-5"><div className="spinner-border text-primary" /></div>
-      ) : filteredPatients.length === 0 ? (
-        <div className="card card-clinical text-center py-5"><User size={48} className="mx-auto text-muted mb-3" /><h5>No Patients</h5><p className="text-muted small">Add your first patient to get started.</p></div>
-      ) : (
+      {loading && (
+        <div className="text-center py-5" role="status">
+          <div className="spinner-border text-primary" />
+          <p className="mt-2 text-muted">Loading patients...</p>
+        </div>
+      )}
+
+      {!loading && error && (
+        <div className="alert alert-danger">{error}</div>
+      )}
+
+      {!loading && !error && filteredPatients.length === 0 && (
+        <div className="card card-clinical text-center py-5">
+          <User size={48} className="mx-auto text-muted mb-3" />
+          <h5>No Patients</h5>
+          <p className="text-muted small">Add your first patient to get started.</p>
+        </div>
+      )}
+
+      {!loading && !error && filteredPatients.length > 0 && (
         <div className="table-responsive">
           <table className="table table-hover align-middle">
             <thead className="table-light">
