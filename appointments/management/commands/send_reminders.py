@@ -1,9 +1,11 @@
 import datetime
+import logging
+
 from django.core.management.base import BaseCommand
 from django.utils import timezone
+
 from appointments.models import Appointment
 from notifications.services import Notifier
-import logging
 
 logger = logging.getLogger(__name__)
 

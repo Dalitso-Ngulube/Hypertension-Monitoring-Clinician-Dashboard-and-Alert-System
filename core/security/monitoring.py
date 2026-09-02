@@ -1,6 +1,7 @@
 import logging
-from django.core.mail import send_mail
+
 from django.conf import settings
+from django.core.mail import send_mail
 from django.utils import timezone
 
 logger = logging.getLogger('security')
@@ -80,7 +81,6 @@ Please investigate immediately.
         else:
             logger.warning(f'Failed login attempt: username={username}, ip={ip}')
 
-            pass
 
     @staticmethod
     def log_api_access(user, method, path, status_code, request=None):

@@ -1,13 +1,19 @@
 import pytest
-from rest_framework.test import APIClient
 from django.urls import reverse
+from rest_framework.test import APIClient
+
 from analytics.cds_service import (
-    get_medication_recommendations,
-    get_lifestyle_recommendations,
+    get_cds_recommendations,
     get_lab_recommendations,
-    get_cds_recommendations
+    get_lifestyle_recommendations,
+    get_medication_recommendations,
 )
-from tests.factories import PatientFactory, PatientMedicalHistoryFactory, BPReadingFactory, ClinicianFactory
+from tests.factories import (
+    BPReadingFactory,
+    ClinicianFactory,
+    PatientFactory,
+    PatientMedicalHistoryFactory,
+)
 
 pytestmark = pytest.mark.django_db
 

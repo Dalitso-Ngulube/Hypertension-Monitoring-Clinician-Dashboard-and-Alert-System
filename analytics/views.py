@@ -1,19 +1,22 @@
 import csv
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.exceptions import PermissionDenied
+from datetime import timedelta
+
+from django.db.models import Avg, Count, Q
+from django.db.models.functions import TruncDate
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
-from django.db.models import Q, Avg, Count
-from django.db.models.functions import TruncDate
 from django.utils import timezone
-from datetime import timedelta
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from accounts.permissions import IsClinicianOrAdmin, IsOwnerOrClinician
+from alerts.models import Alert
 from bp_readings.models import BPReading
 from patients.models import Patient
-from alerts.models import Alert
+
 from .cds_service import get_cds_recommendations
-from accounts.permissions import IsOwnerOrClinician, IsClinicianOrAdmin
 
 
 class PatientTrendView(APIView):

@@ -1,6 +1,7 @@
 from rest_framework import serializers
+
 from .models import Appointment
-from patients.serializers import PatientSerializer
+
 
 class AppointmentSerializer(serializers.ModelSerializer):
     patient_name = serializers.SerializerMethodField()

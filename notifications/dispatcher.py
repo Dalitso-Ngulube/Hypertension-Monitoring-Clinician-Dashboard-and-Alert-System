@@ -1,6 +1,9 @@
 from django.core.mail import send_mail
+
 from alerts.services import send_crisis_sms
+
 from .models import Notification
+
 
 class NotificationDispatcher:
     @staticmethod

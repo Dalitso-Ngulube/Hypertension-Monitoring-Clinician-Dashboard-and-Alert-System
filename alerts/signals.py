@@ -1,8 +1,11 @@
+import logging
+
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from .models import Alert
+
 from notifications.services import Notifier
-import logging
+
+from .models import Alert
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +21,7 @@ def send_alert_notifications(sender, instance, created, **kwargs):
     clinician = patient.clinician
 
     if clinician and clinician.email:
-        subject = f" ALERT: {instance.severity} – {patient.first_name} {patient.last_name}"
+        subject = f"ALERT: {instance.severity} – {patient.first_name} {patient.last_name}"
         body = (
             f"Alert: {instance.message}\n\n"
             f"Patient: {patient.first_name} {patient.last_name} (ID: {patient.id})\n"
@@ -26,15 +29,32 @@ def send_alert_notifications(sender, instance, created, **kwargs):
             f"Time: {instance.created_at}\n\n"
             f"Please log in to VitalTrack for further action."
         )
-        Notifier.send_email(clinician.email, subject, body)
+        try:
+            Notifier.send_email(clinician.email, subject, body)
+            logger.info(f"Email sent to clinician {clinician.email}")
+        except Exception as e:
+            logger.error(f"Failed to send email: {e}")
 
-    # 2. Notify patient via SMS (if phone number exists)
     if patient.phone_number:
         sms_body = f"VitalTrack Alert: {instance.message}. Please contact your clinician."
-        Notifier.send_sms(patient.phone_number, sms_body)
+        try:
+            Notifier.send_sms(patient.phone_number, sms_body)
+            logger.info(f"SMS sent to {patient.phone_number}")
+        except Exception as e:
+            logger.error(f"Failed to send SMS: {e}")
 
-    # 3. Optionally email patient as well
     if patient.user and patient.user.email:
         subject = f"VitalTrack Alert – {patient.first_name} {patient.last_name}"
-        body = f"Dear {patient.first_name},\n\nWe've detected an abnormal blood pressure reading. Please contact your clinician immediately.\n\nDetails: {instance.message}\nTime: {instance.created_at}\n\nStay safe,\nYour VitalTrack Team"
-        Notifier.send_email(patient.user.email, subject, body)
+        body = (
+            f"Dear {patient.first_name},\n\n"
+            f"We've detected an abnormal blood pressure reading. "
+            f"Please contact your clinician immediately.\n\n"
+            f"Details: {instance.message}\n"
+            f"Time: {instance.created_at}\n\n"
+            f"Stay safe,\nYour VitalTrack Team"
+        )
+        try:
+            Notifier.send_email(patient.user.email, subject, body)
+            logger.info(f"Email sent to patient {patient.user.email}")
+        except Exception as e:
+            logger.error(f"Failed to send patient email: {e}")

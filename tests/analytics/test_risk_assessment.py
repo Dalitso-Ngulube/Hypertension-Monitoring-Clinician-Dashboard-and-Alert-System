@@ -1,6 +1,11 @@
 import pytest
+
 from analytics.risk_assessment_service import WHORiskScore
-from tests.factories import PatientFactory, PatientMedicalHistoryFactory, BPReadingFactory
+from tests.factories import (
+    BPReadingFactory,
+    PatientFactory,
+    PatientMedicalHistoryFactory,
+)
 
 pytestmark = pytest.mark.django_db
 

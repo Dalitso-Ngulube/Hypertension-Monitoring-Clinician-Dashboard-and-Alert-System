@@ -1,6 +1,7 @@
 import pytest
 from django.contrib.auth import get_user_model
-from accounts.serializers import RegisterSerializer, ClinicianCreateSerializer
+
+from accounts.serializers import ClinicianCreateSerializer, RegisterSerializer
 
 User = get_user_model()
 

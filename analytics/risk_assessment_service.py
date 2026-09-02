@@ -1,6 +1,7 @@
 import math
-from patients.models import Patient, PatientMedicalHistory
-from bp_readings.models import BPReading
+
+from patients.models import PatientMedicalHistory
+
 
 class WHORiskScore:
     """
@@ -27,16 +28,14 @@ class WHORiskScore:
         # Risk factors
         smoker = history.smoking_status == 'CURRENT' if history else False
         diabetic = history.has_diabetes if history else False
-    
+
         bmi = None
         bmi_source = None
-        
-        # Check if BMI is stored directly in medical history
+
         if history and history.bmi is not None:
             bmi = float(history.bmi)
             bmi_source = 'history'
-        
-        # If not, compute from height and weight (if available on patient)
+
         if bmi is None and patient.height and patient.weight:
             height_m = float(patient.height)
             weight_kg = float(patient.weight)
@@ -44,12 +43,11 @@ class WHORiskScore:
                 bmi = weight_kg / (height_m ** 2)
                 bmi = round(bmi, 1)
                 bmi_source = 'computed'
-        
-        # If BMI is still None, use a reasonable default (24.0 = normal)
+
         if bmi is None:
             bmi = 24.0
             bmi_source = 'default'
-        
+
         # BMI categories (WHO classification)
         if bmi < 18.5:
             bmi_category = 'Underweight'
@@ -63,14 +61,13 @@ class WHORiskScore:
         else:
             bmi_category = 'Obese'
             bmi_coef = 0.6
-        
+
         # ============================================================
-        # WHO risk coefficients (African region, non-laboratory based)
+        # WHO risk coefficients
         # ============================================================
-        
+
         if gender == 'M':
             baseline_survival = 0.9500
-            
             if age < 40:
                 age_coef = 0.0000
             elif age < 50:
@@ -81,7 +78,7 @@ class WHORiskScore:
                 age_coef = 0.8000
             else:
                 age_coef = 1.1000
-            
+
             if sys_bp < 120:
                 bp_coef = 0.0000
             elif sys_bp < 140:
@@ -92,13 +89,13 @@ class WHORiskScore:
                 bp_coef = 0.7000
             else:
                 bp_coef = 1.0000
-            
+
             smoker_coef = 0.6000 if smoker else 0
             diabetic_coef = 0.5000 if diabetic else 0
-            
+
         else:
             baseline_survival = 0.9700
-            
+
             if age < 40:
                 age_coef = 0.0000
             elif age < 50:
@@ -109,7 +106,7 @@ class WHORiskScore:
                 age_coef = 0.9000
             else:
                 age_coef = 1.3000
-            
+
             if sys_bp < 120:
                 bp_coef = 0.0000
             elif sys_bp < 140:
@@ -120,42 +117,42 @@ class WHORiskScore:
                 bp_coef = 0.8500
             else:
                 bp_coef = 1.2000
-            
+
             smoker_coef = 0.8000 if smoker else 0
             diabetic_coef = 0.7000 if diabetic else 0
-        
+
         # ============================================================
         # Calculate total score (including BMI)
         # ============================================================
         score = age_coef + bp_coef + smoker_coef + diabetic_coef + bmi_coef
-        
+
         # Calculate 10-year risk
         risk = 1 - baseline_survival ** math.exp(score)
         risk_percentage = round(risk * 100, 1)
-        
-        # WHO categories
+
+
         if risk_percentage < 5:
             category = 'Low'
-            color = 'bg-emerald-100 text-emerald-700 border-emerald-300'
+            color = 'success'
         elif risk_percentage < 10:
             category = 'Low-Moderate'
-            color = 'bg-green-100 text-green-700 border-green-300'
+            color = 'info'
         elif risk_percentage < 20:
             category = 'Moderate'
-            color = 'bg-amber-100 text-amber-700 border-amber-300'
+            color = 'warning'
         elif risk_percentage < 30:
             category = 'High'
-            color = 'bg-orange-100 text-orange-700 border-orange-300'
+            color = 'danger'
         else:
             category = 'Very High'
-            color = 'bg-rose-100 text-rose-700 border-rose-300'
-        
+            color = 'danger'
+
         bmi_info = {
             'value': bmi,
             'category': bmi_category,
             'source': bmi_source,
         }
-        
+
         return risk_percentage, category, color, bmi_info
 
 
@@ -205,18 +202,19 @@ def get_risk_profile(patient):
             modifiable.append('Reduce Alcohol Intake')
         if history.physical_activity in ['SEDENTARY', 'LIGHT']: 
             modifiable.append('Increase Physical Activity')
-        if history.diet_description: 
-            modifiable.append('Improve Diet (DASH)')
-    
+        if history.diet_description:
+            # Add dietary improvement as a modifiable factor
+            modifiable.append('Improve Dietary Habits')
+
     if bmi_info['category'] in ['Overweight', 'Obese']:
         modifiable.append('Weight Management (target BMI <25)')
-    
+
     recommendations = get_risk_recommendations(risk_category, additional_risks, modifiable, bmi_info)
-    
+
     return {
         'risk_percentage': risk_percentage,
         'risk_category': risk_category,
-        'risk_color': risk_color,
+        'risk_color': risk_color,          # Now 'success', 'info', 'warning', 'danger'
         'bmi': bmi_info,
         'is_complete': is_complete,
         'additional_risk_factors': additional_risks,
@@ -235,28 +233,28 @@ def get_risk_recommendations(category, additional_risks, modifiable, bmi_info):
         recs.append('[MEDICATION] Initiate or optimize antihypertensive therapy to achieve BP <140/90 (or <130/80 if diabetic/CKD).')
         recs.append('[MEDICATION] Consider aspirin therapy (if no contraindications).')
         recs.append('[MONITOR] Monitor BP and lipids every 3 months.')
-        
+
     elif category == 'High':
         recs.append('[MEDICATION] Initiate statin therapy (moderate-intensity).')
         recs.append('[MEDICATION] Optimize antihypertensive therapy.')
         recs.append('[MONITOR] Monitor BP every 3-6 months.')
         recs.append('[FOLLOW-UP] Reassess risk in 6-12 months.')
-        
+
     elif category == 'Moderate':
         recs.append('[MEDICATION] Consider statin therapy (low-to-moderate intensity).')
         recs.append('[MONITOR] Monitor BP regularly.')
         recs.append('[FOLLOW-UP] Reassess risk in 1 year.')
         recs.append('[LIFESTYLE] Continue lifestyle modifications.')
-        
+
     elif category == 'Low-Moderate':
         recs.append('[LIFESTYLE] Lifestyle modifications recommended.')
         recs.append('[MONITOR] Monitor BP annually.')
         recs.append('[FOLLOW-UP] Reassess risk in 2 years.')
-        
+
     else:  # Low
         recs.append('[LIFESTYLE] Continue healthy lifestyle measures.')
         recs.append('[FOLLOW-UP] Reassess in 2-3 years.')
-    
+
     # BMI-specific recommendations
     if bmi_info and bmi_info['category'] == 'Obese':
         recs.append('[WEIGHT] Weight loss: aim for 5-10% weight loss over 6 months.')
@@ -264,7 +262,7 @@ def get_risk_recommendations(category, additional_risks, modifiable, bmi_info):
     elif bmi_info and bmi_info['category'] == 'Overweight':
         recs.append('[WEIGHT] Weight management: aim for 5% weight loss over 6 months.')
         recs.append('[DIET] Review dietary habits and physical activity.')
-    
+
     # Additional recommendations based on specific risk factors
     if 'Current Smoker' in additional_risks:
         recs.append('[SMOKING] Strongly advise smoking cessation. Consider nicotine replacement therapy.')
@@ -276,11 +274,11 @@ def get_risk_recommendations(category, additional_risks, modifiable, bmi_info):
         recs.append('[ALCOHOL] Reduce alcohol intake to <=1 drink/day (women) or <=2 drinks/day (men).')
     if 'Sedentary Lifestyle' in additional_risks:
         recs.append('[EXERCISE] Aim for at least 150 minutes of moderate-intensity exercise per week.')
-    
+
     # Add modifiable factors
     for item in modifiable:
         recs.append(f'[MODIFY] {item}')
-    
+
     # Remove duplicates while preserving order
     seen = set()
     unique_recs = []
@@ -288,5 +286,5 @@ def get_risk_recommendations(category, additional_risks, modifiable, bmi_info):
         if rec not in seen:
             seen.add(rec)
             unique_recs.append(rec)
-    
+
     return unique_recs

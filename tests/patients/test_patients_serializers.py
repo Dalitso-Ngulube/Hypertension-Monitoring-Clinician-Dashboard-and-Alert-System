@@ -1,8 +1,10 @@
+from decimal import Decimal
+
 import pytest
-from decimal import Decimal 
+
+from patients.models import PatientMedicalHistory
 from patients.serializers import PatientMedicalHistorySerializer
 from tests.factories import PatientFactory
-from patients.models import PatientMedicalHistory
 
 pytestmark = pytest.mark.django_db
 

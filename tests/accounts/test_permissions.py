@@ -1,7 +1,9 @@
 import pytest
 from rest_framework.test import APIRequestFactory
+
 from accounts.permissions import IsOwnerOrClinician
-from tests.factories import UserFactory, PatientFactory
+from tests.factories import PatientFactory, UserFactory
+
 
 @pytest.mark.django_db
 def test_is_owner_or_clinician():

@@ -1,13 +1,15 @@
 from django.urls import path
+
 from .views import (
-    PatientTrendView,
     AnalyticsSummaryView,
-    RiskDistributionView,
-    RiskScoreView,  BPTrendView,
-    PatientTimeOfDayPatternsView,
-    ExportPatientDataCSV,
-    ExportAllPatientsSummaryCSV,
+    BPTrendView,
     ClinicalDecisionSupportView,
+    ExportAllPatientsSummaryCSV,
+    ExportPatientDataCSV,
+    PatientTimeOfDayPatternsView,
+    PatientTrendView,
+    RiskDistributionView,
+    RiskScoreView,
 )
 
 urlpatterns = [

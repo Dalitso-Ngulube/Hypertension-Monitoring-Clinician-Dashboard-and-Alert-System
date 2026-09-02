@@ -1,8 +1,13 @@
 from rest_framework import serializers
+
 from .models import (
-    Patient, MedicalCondition, Allergy, Medication,
-    PatientMedicalHistory
+    Allergy,
+    MedicalCondition,
+    Medication,
+    Patient,
+    PatientMedicalHistory,
 )
+
 
 class PatientSerializer(serializers.ModelSerializer):
     """Basic patient serializer (for list views)"""

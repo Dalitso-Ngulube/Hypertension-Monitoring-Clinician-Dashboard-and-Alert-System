@@ -1,5 +1,7 @@
 import re
+
 from django.core.exceptions import ValidationError
+
 
 class SpecialCharacterValidator:
     def validate(self, password, user=None):

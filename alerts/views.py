@@ -1,8 +1,10 @@
 from rest_framework import generics, permissions
 from rest_framework.exceptions import PermissionDenied
+
+from accounts.permissions import IsClinicianOrAdmin, IsOwnerOrClinician
+
 from .models import Alert
 from .serializers import AlertSerializer
-from accounts.permissions import IsClinicianOrAdmin, IsOwnerOrClinician
 
 
 class AlertListCreateView(generics.ListCreateAPIView):

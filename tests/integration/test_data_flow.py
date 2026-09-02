@@ -1,33 +1,34 @@
 import pytest
-from rest_framework.test import APIClient
 from django.urls import reverse
-from tests.factories import UserFactory, PatientFactory, ClinicianFactory
+from rest_framework.test import APIClient
+
 from alerts.models import Alert
+from tests.factories import ClinicianFactory, PatientFactory
 
 pytestmark = pytest.mark.django_db
 
 def test_clinician_creates_patient_adds_reading_and_resolves_alert():
-    clinician = UserFactory(role='clinician')
+    clinician = ClinicianFactory()
     client = APIClient()
     client.force_authenticate(user=clinician)
 
-    # 1. Create a patient (via factory to ensure clinician is assigned)
     patient = PatientFactory(clinician=clinician)
-    patient_id = patient.id
 
-    # 2. Add a CRISIS BP reading
-    reading_data = {'patient': patient_id, 'systolic': 190, 'diastolic': 110}
+    reading_data = {
+        'patient': patient.id,
+        'systolic': 190,
+        'diastolic': 110,
+        'recorded_at': '2026-06-23T10:00:00Z'
+    }
     url = reverse('bp-reading-list-create')
     response = client.post(url, reading_data)
     assert response.status_code == 201
 
-    # 3. Verify alert was auto-created
-    alert = Alert.objects.get(patient_id=patient_id)
+    alert = Alert.objects.filter(patient=patient, alert_type='CRISIS').first()
+    assert alert is not None
     assert alert.severity == 'CRITICAL'
     assert alert.is_resolved is False
-    assert "CRISIS" in alert.message
 
-    # 4. Clinician resolves the alert
     url = reverse('alert-update', args=[alert.id])
     response = client.patch(url, {'is_resolved': True})
     assert response.status_code == 200

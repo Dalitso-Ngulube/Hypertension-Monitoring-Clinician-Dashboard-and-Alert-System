@@ -1,6 +1,8 @@
-from django.db import models
 from django.conf import settings
+from django.db import models
+
 from patients.models import Patient
+
 
 class Appointment(models.Model):
     STATUS_CHOICES = (

@@ -1,15 +1,20 @@
 import os
 import random
 from datetime import timedelta
-from django.core.management.base import BaseCommand
+
 from django.contrib.auth import get_user_model
+from django.core.management.base import BaseCommand
 from django.utils import timezone
-from patients.models import (
-    Patient, PatientMedicalHistory, MedicalCondition,
-    Allergy, Medication
-)
-from bp_readings.models import BPReading
+
 from alerts.models import Alert
+from bp_readings.models import BPReading
+from patients.models import (
+    Allergy,
+    MedicalCondition,
+    Medication,
+    Patient,
+    PatientMedicalHistory,
+)
 
 User = get_user_model()
 

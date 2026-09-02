@@ -1,7 +1,8 @@
 import pytest
-from rest_framework.test import APIClient
 from django.urls import reverse
-from tests.factories import PatientFactory, ClinicianFactory, BPReadingFactory
+from rest_framework.test import APIClient
+
+from tests.factories import BPReadingFactory, ClinicianFactory, PatientFactory
 
 pytestmark = pytest.mark.django_db
 

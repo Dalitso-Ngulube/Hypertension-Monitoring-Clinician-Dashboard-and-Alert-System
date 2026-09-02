@@ -1,6 +1,8 @@
 import logging
+
 from alerts.models import Alert
 from bp_readings.models import BPReading
+
 from .utils import classify_bp
 
 logger = logging.getLogger(__name__)

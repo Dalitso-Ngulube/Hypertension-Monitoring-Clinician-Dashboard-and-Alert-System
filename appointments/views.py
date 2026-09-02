@@ -1,8 +1,10 @@
-from rest_framework import viewsets, permissions, status
-from rest_framework.response import Response
+from rest_framework import permissions, viewsets
+
+from accounts.permissions import IsClinicianOrAdmin
+
 from .models import Appointment
 from .serializers import AppointmentSerializer
-from accounts.permissions import IsClinicianOrAdmin
+
 
 class AppointmentViewSet(viewsets.ModelViewSet):
     serializer_class = AppointmentSerializer

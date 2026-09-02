@@ -1,14 +1,17 @@
-from rest_framework import generics, permissions
 from django.contrib.auth import get_user_model
-from .serializers import RegisterSerializer, ClinicianCreateSerializer, UserSerializer
-from accounts.permissions import IsClinicianOrAdmin
 from django.contrib.auth.views import (
-    PasswordResetView, 
-    PasswordResetDoneView, 
-    PasswordResetConfirmView, 
-    PasswordResetCompleteView
+    PasswordResetCompleteView,
+    PasswordResetConfirmView,
+    PasswordResetDoneView,
+    PasswordResetView,
 )
 from django.urls import reverse_lazy
+from rest_framework import generics, permissions
+
+from accounts.permissions import IsClinicianOrAdmin
+
+from .serializers import ClinicianCreateSerializer, RegisterSerializer, UserSerializer
+
 User = get_user_model()
 
 class RegisterView(generics.CreateAPIView):

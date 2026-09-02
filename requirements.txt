@@ -8,3 +8,9 @@ PyJWT==2.12.1
 python-dotenv==1.2.2
 sqlparse==0.5.5
 tzdata==2026.2
+twilio==9.0.0
+django-ratelimit==4.1.0
+factory-boy==3.3.0
+pytest==8.2.0
+pytest-django==4.8.0
+pytest-cov==5.0.0

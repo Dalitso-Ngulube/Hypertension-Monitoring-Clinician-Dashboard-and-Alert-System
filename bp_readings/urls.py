@@ -1,5 +1,6 @@
 from django.urls import path
-from .views import BPReadingListCreateView, BPReadingDetailView,PatientAddReadingView
+
+from .views import BPReadingDetailView, BPReadingListCreateView, PatientAddReadingView
 
 urlpatterns = [
     path('', BPReadingListCreateView.as_view(), name='bp-reading-list-create'),

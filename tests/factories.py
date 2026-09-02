@@ -1,11 +1,11 @@
-import factory
-from factory.django import DjangoModelFactory
-from factory import Faker, SubFactory, post_generation
 from django.contrib.auth import get_user_model
-from patients.models import Patient, PatientMedicalHistory
-from bp_readings.models import BPReading
+from factory import Faker, SubFactory, post_generation
+from factory.django import DjangoModelFactory
+
 from alerts.models import Alert
 from appointments.models import Appointment
+from bp_readings.models import BPReading
+from patients.models import Patient, PatientMedicalHistory
 
 User = get_user_model()
 

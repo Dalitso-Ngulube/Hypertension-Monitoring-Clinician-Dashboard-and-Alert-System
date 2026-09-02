@@ -1,10 +1,11 @@
 from rest_framework import generics, permissions
 from rest_framework.exceptions import PermissionDenied
+
+from accounts.permissions import IsOwnerOrClinician
+from patients.models import Patient
+
 from .models import BPReading
 from .serializers import BPReadingSerializer, PatientAddReadingSerializer
-from patients.models import Patient
-from alerts.models import Alert
-from accounts.permissions import IsOwnerOrClinician
 
 
 class BPReadingListCreateView(generics.ListCreateAPIView):
@@ -45,18 +46,6 @@ class BPReadingListCreateView(generics.ListCreateAPIView):
 
         reading = serializer.save()
 
-        if reading.risk_category in ['CRISIS', 'STAGE_2']:
-            Alert.objects.get_or_create(
-                patient=reading.patient,
-                is_resolved=False,
-                alert_type='BP_CRITICAL',
-                defaults={
-                    'severity': 'CRITICAL' if reading.risk_category == 'CRISIS' else 'HIGH',
-                    'message': f"{reading.risk_category} reading: {reading.systolic}/{reading.diastolic} at {reading.recorded_at}",
-                }
-            )
-
-
 class BPReadingDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = BPReading.objects.all()
     serializer_class = BPReadingSerializer
@@ -89,14 +78,3 @@ class PatientAddReadingView(generics.CreateAPIView):
             source='MANUAL'
         )
         reading.save()
-
-        if reading.risk_category in ['CRISIS', 'STAGE_2']:
-            Alert.objects.get_or_create(
-                patient=reading.patient,
-                is_resolved=False,
-                alert_type='BP_CRITICAL',
-                defaults={
-                    'severity': 'CRITICAL' if reading.risk_category == 'CRISIS' else 'HIGH',
-                    'message': f"{reading.risk_category} reading: {reading.systolic}/{reading.diastolic} at {reading.recorded_at}",
-                }
-            )

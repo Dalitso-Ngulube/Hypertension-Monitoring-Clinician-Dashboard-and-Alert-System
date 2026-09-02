@@ -1,12 +1,24 @@
-from rest_framework import generics, permissions
 from django.shortcuts import get_object_or_404
+from rest_framework import generics, permissions
 from rest_framework.exceptions import PermissionDenied
-from .models import Patient, PatientMedicalHistory, MedicalCondition, Allergy, Medication
-from .serializers import (
-   PatientSerializer, PatientDetailSerializer, PatientMedicalHistorySerializer,
-   MedicalConditionSerializer, AllergySerializer, MedicationSerializer
-)
+
 from accounts.permissions import IsOwnerOrClinician
+
+from .models import (
+    Allergy,
+    MedicalCondition,
+    Medication,
+    Patient,
+    PatientMedicalHistory,
+)
+from .serializers import (
+    AllergySerializer,
+    MedicalConditionSerializer,
+    MedicationSerializer,
+    PatientMedicalHistorySerializer,
+    PatientSerializer,
+)
+
 
 class PatientListCreateView(generics.ListCreateAPIView):
     serializer_class = PatientSerializer

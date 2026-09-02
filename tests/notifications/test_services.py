@@ -1,13 +1,21 @@
 from unittest.mock import patch
+
 from django.conf import settings
+from django.test import TestCase
+
 from notifications.services import Notifier
 
-class TestNotifier:
+
+class TestNotifier(TestCase):
     @patch('notifications.services.send_mail')
     def test_send_email(self, mock_send_mail):
         Notifier.send_email('test@example.com', 'Subject', 'Message')
         mock_send_mail.assert_called_once_with(
-            'Subject', 'Message', 'webmaster@localhost', ['test@example.com']
+            'Subject', 
+            'Message', 
+            settings.DEFAULT_FROM_EMAIL, 
+            ['test@example.com'],
+
         )
 
     @patch('notifications.services.send_mail', side_effect=Exception('SMTP error'))

@@ -1,6 +1,11 @@
 from django.contrib import admin
+
 from .models import (
-    Patient, MedicalCondition, Allergy, Medication, PatientMedicalHistory
+    Allergy,
+    MedicalCondition,
+    Medication,
+    Patient,
+    PatientMedicalHistory,
 )
 
 

@@ -1,5 +1,7 @@
 from django.db import models
+
 from patients.models import Patient
+
 
 class Alert(models.Model):
     SEVERITY_CHOICES = (

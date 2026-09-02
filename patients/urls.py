@@ -1,14 +1,13 @@
 from django.urls import path
+
 from .views import (
-    PatientListCreateView,
-    PatientDetailView,
-    PatientMedicalHistoryView,
-    MedicalConditionListView,
     AllergyListView,
+    MedicalConditionListView,
     MedicationListView,
+    PatientDetailView,
+    PatientListCreateView,
+    PatientMedicalHistoryView,
 )
-
-
 
 urlpatterns = [
     path(

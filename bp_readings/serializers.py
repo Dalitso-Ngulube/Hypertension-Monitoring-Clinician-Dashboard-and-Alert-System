@@ -1,5 +1,7 @@
 from rest_framework import serializers
+
 from .models import BPReading
+
 
 class BPReadingSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(source='patient.first_name', read_only=True)

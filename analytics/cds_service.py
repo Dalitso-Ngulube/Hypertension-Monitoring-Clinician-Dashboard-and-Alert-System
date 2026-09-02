@@ -1,12 +1,12 @@
 # analytics/cds_service.py
 
-from datetime import datetime, timedelta
-from django.utils import timezone
+from datetime import timedelta
+
 from django.db.models import Avg
-from patients.models import Patient, PatientMedicalHistory
+from django.utils import timezone
+
 from bp_readings.models import BPReading
-from alerts.models import Alert
-from core.utils import classify_bp
+
 
 def get_recent_avg_bp(patient, days=30):
     """Return average systolic and diastolic over the last `days` days."""
@@ -70,7 +70,7 @@ def get_medication_recommendations(patient, stage, comorbidities):
             recommendations.append({
                 'priority': 'HIGH',
                 'recommendation': f'Initiate dual therapy: {first} + {second}.',
-                'details': f'Consider combination therapy to achieve target BP (<140/90, or <130/80 if diabetic/CKD).'
+                'details': 'Consider combination therapy to achieve target BP (<140/90, or <130/80 if diabetic/CKD).'
             })
         else:
             recommendations.append({
@@ -90,7 +90,7 @@ def get_medication_recommendations(patient, stage, comorbidities):
             rec = {
                 'priority': 'MEDIUM',
                 'recommendation': f'Initiate monotherapy: {preferred_classes[0]}.',
-                'details': f'Start with low dose, titrate up. Target BP <140/90 (or <130/80 if diabetic/CKD).'
+                'details': 'Start with low dose, titrate up. Target BP <140/90 (or <130/80 if diabetic/CKD).'
             }
             recommendations.append(rec)
         else:
@@ -184,13 +184,13 @@ def get_clinical_summary(patient, stage, recommendations, labs, lifestyle):
     """Generate a human-readable summary."""
     summary = f"Patient {patient.first_name} {patient.last_name} (ID: {patient.id}) - BP Assessment\n"
     summary += f"Stage: {stage or 'Undetermined'}\n"
-    summary += f"Recommendations:\n"
+    summary += "Recommendations:\n"
     for rec in recommendations:
         summary += f"  - {rec['recommendation']} (Priority: {rec['priority']})\n"
-    summary += f"\nSuggested Investigations:\n"
+    summary += "\nSuggested Investigations:\n"
     for lab in labs:
         summary += f"  - {lab}\n"
-    summary += f"\nLifestyle Modifications:\n"
+    summary += "\nLifestyle Modifications:\n"
     for item in lifestyle:
         summary += f"  - {item}\n"
     return summary

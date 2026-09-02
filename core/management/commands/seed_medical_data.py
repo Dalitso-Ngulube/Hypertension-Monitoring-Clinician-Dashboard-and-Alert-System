@@ -1,6 +1,7 @@
-import json
 from django.core.management.base import BaseCommand
-from patients.models import MedicalCondition, Allergy, Medication
+
+from patients.models import Allergy, MedicalCondition, Medication
+
 
 class Command(BaseCommand):
     help = 'Seed medical reference data (conditions, allergies, medications)'
