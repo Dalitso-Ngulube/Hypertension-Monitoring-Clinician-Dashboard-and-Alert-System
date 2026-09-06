@@ -14,9 +14,9 @@ def run_alert_engine(sender, instance, created, **kwargs):
     """Run alert engine when a new BP reading is created."""
     if not created:
         return
-    
+
     logger.info(f"Running alert engine for reading {instance.id}")
-    
+
     AlertEngine.check_crisis(instance)
     AlertEngine.check_trend(instance.patient)
     AlertEngine.check_missed_readings(instance.patient)

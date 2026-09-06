@@ -9,8 +9,13 @@ class BPReadingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BPReading
-        fields = ('id', 'patient', 'first_name', 'last_name', 'systolic', 'diastolic', 'pulse_rate', 'recorded_at', 'source', 'risk_category', 'created_at')
-        read_only_fields = ('created_at', 'risk_category')
+        fields = ['id', 'patient', 'first_name', 'last_name', 'systolic', 'diastolic', 'pulse_rate', 'recorded_at', 'source', 'risk_category', 'created_at']
+        read_only_fields = ['patient', 'risk_category', 'created_at']
+        extra_kwargs = {
+            'systolic': {'required': True},
+            'diastolic': {'required': True},
+            'pulse_rate': {'required': True},
+        }
 
     def validate(self, data):
         systolic = data.get('systolic')

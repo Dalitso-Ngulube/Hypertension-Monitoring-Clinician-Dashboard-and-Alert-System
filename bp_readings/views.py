@@ -1,6 +1,5 @@
 from rest_framework import generics, permissions
 from rest_framework.exceptions import PermissionDenied
-
 from accounts.permissions import IsOwnerOrClinician
 from patients.models import Patient
 
@@ -16,7 +15,6 @@ class BPReadingListCreateView(generics.ListCreateAPIView):
         user = self.request.user
         queryset = BPReading.objects.all()
 
-        # 1. Role‑based base filtering
         if user.role == 'admin':
             queryset = BPReading.objects.all()
         elif user.role == 'clinician':
@@ -24,7 +22,6 @@ class BPReadingListCreateView(generics.ListCreateAPIView):
         else:  # patient
             queryset = BPReading.objects.filter(patient__user=user)
 
-        # 2. Filter by specific patient ID (from query param)
         patient_id = self.request.query_params.get('patient')
         if patient_id:
             queryset = queryset.filter(patient_id=patient_id)
@@ -44,7 +41,8 @@ class BPReadingListCreateView(generics.ListCreateAPIView):
             if patient.user != user:
                 raise PermissionDenied("You can only add readings for yourself.")
 
-        reading = serializer.save()
+        serializer.save()
+
 
 class BPReadingDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = BPReading.objects.all()
@@ -55,26 +53,28 @@ class BPReadingDetailView(generics.RetrieveUpdateDestroyAPIView):
 class PatientAddReadingView(generics.CreateAPIView):
     """
     Allow a patient to add their own BP reading.
-    They must be logged in and have a patient record.
+    Auto-creates a Patient profile if one does not exist.
     """
     serializer_class = PatientAddReadingSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrClinician]
 
     def perform_create(self, serializer):
         user = self.request.user
         if user.role != 'patient':
             raise PermissionDenied("Only patients can add readings here.")
 
-        try:
-            patient = Patient.objects.get(user=user)
-        except Patient.DoesNotExist:
-            raise PermissionDenied("You do not have a patient profile.")
-
-        reading = BPReading(
-            patient=patient,
-            systolic=serializer.validated_data['systolic'],
-            diastolic=serializer.validated_data['diastolic'],
-            pulse_rate=serializer.validated_data.get('pulse_rate'),
-            source='MANUAL'
+        # Get or create the patient profile
+        patient, created = Patient.objects.get_or_create(
+            user=user,
+            defaults={
+                'first_name': user.first_name or user.username,
+                'last_name': '',
+                'age': 0,
+                'gender': '',
+                'phone_number': getattr(user, 'phone_number', ''),
+                'address': '',
+            }
         )
-        reading.save()
+
+        # Save the reading with the patient
+        serializer.save(patient=patient)

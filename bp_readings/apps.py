@@ -12,4 +12,4 @@ class BpReadingsConfig(AppConfig):
 
     def ready(self):
         """Import signals when the app is ready."""
-        import bp_readings.signals  # noqa: F401 
+        import bp_readings.signals 
