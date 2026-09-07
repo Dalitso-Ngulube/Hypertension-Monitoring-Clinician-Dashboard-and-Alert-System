@@ -6,6 +6,7 @@ import { Search, UserPlus, User, Mail, Phone, Calendar, ChevronLeft, Download, E
 import AddPatientModal from '../components/AddPatientModal';
 import AddReadingModal from '../components/AddReadingModal';
 import MedicalHistory from '../components/MedicalHistory';
+import BPHistoryTable from '../components/BPHistoryTable';
 
 const Patients = () => {
   const { user } = useContext(AuthContext);
@@ -71,6 +72,7 @@ const Patients = () => {
           </div>
         </div>
         <MedicalHistory patientId={selectedPatient.id} onUpdate={handleRefresh} />
+        <BPHistoryTable patientId={selectedPatient.id} />
       </div>
     );
   }
