@@ -14,6 +14,7 @@ import {
   Legend,
   Filler,
 } from 'chart.js';
+import BPHistoryTable from '../components/BPHistoryTable';   // <-- ADDED
 
 ChartJS.register(
   CategoryScale,
@@ -171,6 +172,9 @@ const PatientDashboard = () => {
           )}
         </div>
       </div>
+
+      {/* BP History Table added here */}
+      <BPHistoryTable />
 
       <button
         className="btn btn-primary rounded-circle p-3 shadow-lg position-fixed"
