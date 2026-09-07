@@ -42,7 +42,7 @@ class AlertEngine:
                     logger.info(f"Trend alert created for patient {patient.id}")
                 return True
         return False
-    
+
     @staticmethod
     def check_missed_readings(patient):
         """Check if patient has no reading in last 48 hours."""
