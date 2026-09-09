@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
+import { AuthContext } from '../context/AuthContext';
 import api from '../api/axiosConfig';
 import { Plus } from 'lucide-react';
 
 const AddReadingModal = ({ patientId, patientName, onReadingAdded, onClose }) => {
+  const { user } = useContext(AuthContext);
   const [show, setShow] = useState(false);
   const [formData, setFormData] = useState({
     systolic: '',
@@ -22,20 +24,38 @@ const AddReadingModal = ({ patientId, patientName, onReadingAdded, onClose }) =>
     setError('');
 
     try {
-      const payload = {
-        patient: patientId,
-        systolic: parseInt(formData.systolic),
-        diastolic: parseInt(formData.diastolic),
-        pulse_rate: formData.pulse_rate ? parseInt(formData.pulse_rate) : null,
-      };
-      await api.post('/bp_readings/', payload);
+      // Determine endpoint and payload based on user role
+      let endpoint = '/bp_readings/';
+      let payload = { ...formData };
+
+      if (user?.role === 'patient') {
+        endpoint = '/bp_readings/patient/add/';
+      } else {
+
+        if (!patientId) {
+          setError('Patient ID is missing.');
+          setLoading(false);
+          return;
+        }
+        payload.patient = parseInt(patientId);
+      }
+
+      payload.systolic = parseInt(payload.systolic);
+      payload.diastolic = parseInt(payload.diastolic);
+      if (payload.pulse_rate) {
+        payload.pulse_rate = parseInt(payload.pulse_rate);
+      }
+
+      await api.post(endpoint, payload);
+
       setShow(false);
       setFormData({ systolic: '', diastolic: '', pulse_rate: '' });
       if (onReadingAdded) onReadingAdded();
       if (onClose) onClose();
     } catch (err) {
       console.error('Error adding reading:', err);
-      setError('Failed to add reading. Please check the values.');
+      const errorMsg = err.response?.data?.detail || err.response?.data?.message || 'Failed to add reading.';
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -70,7 +90,7 @@ const AddReadingModal = ({ patientId, patientName, onReadingAdded, onClose }) =>
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Add Reading for {patientName}</h5>
+                <h5 className="modal-title">Add Reading {patientName && `for ${patientName}`}</h5>
                 <button className="btn-close" aria-label="Close" onClick={handleClose} />
               </div>
               <form onSubmit={handleSubmit}>

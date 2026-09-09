@@ -19,7 +19,7 @@ const renderWithContext = (component, user) => {
 
 describe('MedicalHistory', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    jest.resetAllMocks();
   });
 
   const mockHistoryData = {

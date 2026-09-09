@@ -60,9 +60,13 @@ describe('BPHistoryTable', () => {
     });
   });
 
-  it('does not fetch when patientId is missing', () => {
+  it('fetches the logged-in patient readings when patientId is missing', async () => {
+    api.get.mockResolvedValue({ data: { results: [] } });
     render(<BPHistoryTable patientId={null} />);
-    expect(api.get).not.toHaveBeenCalled();
-    expect(screen.getByText(/No BP readings recorded/i)).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(api.get).toHaveBeenCalledWith('/bp_readings/');
+      expect(screen.getByText(/No BP readings recorded/i)).toBeInTheDocument();
+    });
   });
 });

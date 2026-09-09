@@ -1,11 +1,18 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import AddReadingModal from '../AddReadingModal';
+import { AuthContext } from '../../context/AuthContext';
 import api from '../../api/axiosConfig';
 
 jest.mock('../../api/axiosConfig', () => ({
   post: jest.fn(),
 }));
+
+const renderWithContext = (component) => render(
+  <AuthContext.Provider value={{ user: { role: 'clinician' }, isAuthenticated: true }}>
+    {component}
+  </AuthContext.Provider>
+);
 
 describe('AddReadingModal', () => {
   const mockOnSuccess = jest.fn();
@@ -17,7 +24,7 @@ describe('AddReadingModal', () => {
 
   it('submits form with valid data', async () => {
     api.post.mockResolvedValueOnce({ data: { id: 1 } });
-    render(<AddReadingModal patientId={1} patientName="John Doe" onReadingAdded={mockOnSuccess} onClose={mockOnClose} />);
+    renderWithContext(<AddReadingModal patientId={1} patientName="John Doe" onReadingAdded={mockOnSuccess} onClose={mockOnClose} />);
 
     const openButton = screen.getByRole('button', { name: /Add Reading/i });
     fireEvent.click(openButton);
@@ -43,7 +50,7 @@ describe('AddReadingModal', () => {
   });
 
   it('calls onClose when Cancel is clicked', async () => {
-    render(<AddReadingModal patientId={1} patientName="John Doe" onReadingAdded={mockOnSuccess} onClose={mockOnClose} />);
+    renderWithContext(<AddReadingModal patientId={1} patientName="John Doe" onReadingAdded={mockOnSuccess} onClose={mockOnClose} />);
     const openButton = screen.getByRole('button', { name: /Add Reading/i });
     fireEvent.click(openButton);
 
@@ -54,7 +61,7 @@ describe('AddReadingModal', () => {
   });
 
   it('calls onClose when clicking close button', async () => {
-    render(<AddReadingModal patientId={1} patientName="John Doe" onReadingAdded={mockOnSuccess} onClose={mockOnClose} />);
+    renderWithContext(<AddReadingModal patientId={1} patientName="John Doe" onReadingAdded={mockOnSuccess} onClose={mockOnClose} />);
     const openButton = screen.getByRole('button', { name: /Add Reading/i });
     fireEvent.click(openButton);
 

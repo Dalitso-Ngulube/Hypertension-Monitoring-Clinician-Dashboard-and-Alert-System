@@ -5,6 +5,7 @@ import api from '../../api/axiosConfig';
 import { AuthContext } from '../../context/AuthContext';
 
 jest.mock('../../api/axiosConfig');
+jest.mock('../../components/BPHistoryTable', () => () => <div>BP history</div>);
 jest.mock('react-chartjs-2', () => ({
   Line: () => null,
 }));
