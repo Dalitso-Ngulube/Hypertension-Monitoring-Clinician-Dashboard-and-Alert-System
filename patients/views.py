@@ -42,12 +42,14 @@ class PatientListCreateView(generics.ListCreateAPIView):
         else:
             raise PermissionDenied("Patients are not allowed to create patient records.")
 
+
 class PatientDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Patient.objects.all()
     serializer_class = PatientSerializer
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrClinician]
+
+
 class PatientMedicalHistoryView(generics.RetrieveUpdateAPIView):
-    """Get or update a patient's medical history"""
     serializer_class = PatientMedicalHistorySerializer
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrClinician]
 
@@ -55,29 +57,26 @@ class PatientMedicalHistoryView(generics.RetrieveUpdateAPIView):
         patient_id = self.kwargs.get('patient_id')
         patient = get_object_or_404(Patient, id=patient_id)
         history, created = PatientMedicalHistory.objects.get_or_create(patient=patient)
-
         return history
+
     def update(self, request, *args, **kwargs):
         kwargs['partial'] = True
         return super().update(request, *args, **kwargs)
 
 
 class MedicalConditionListView(generics.ListAPIView):
-    """List all medical conditions"""
     queryset = MedicalCondition.objects.all()
     serializer_class = MedicalConditionSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
 class AllergyListView(generics.ListAPIView):
-    """List all allergies"""
     queryset = Allergy.objects.all()
     serializer_class = AllergySerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
 class MedicationListView(generics.ListAPIView):
-    """List all medications"""
     queryset = Medication.objects.all()
     serializer_class = MedicationSerializer
     permission_classes = [permissions.IsAuthenticated]
