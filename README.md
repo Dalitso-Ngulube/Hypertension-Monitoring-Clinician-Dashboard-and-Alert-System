@@ -1,6 +1,6 @@
 # Hypertension Monitoring Clinician Dashboard & Alert System
 
-> A full‑stack web application that helps clinicians to monitor hypertensive patients, analyse blood pressure trends, classify risk according to WHO guidelines, and receive real‑time alerts for critical readings.
+> A full‑stack web application that helps clinicians to monitor hypertensive patients, analyse blood pressure trends, classify risk according to AHA/ACC guidelines, and receive real‑time alerts for critical readings.
 
 ---
 
@@ -19,13 +19,13 @@
 
 ---
 
-##  Overview
+## Overview
 
 Hypertension is a leading global health challenge, particularly in resource‑constrained regions. This project addresses the gap between patient‑generated blood pressure data and effective clinical management. It provides a **secure, web‑based dashboard** for clinicians to:
 
 - View patient profiles and medical histories.
 - Track BP trends over time (7/30/90 days).
-- Classify risk automatically using WHO/JNC 8 guidelines.
+- Classify risk automatically using  guidelines.
 - Receive real‑time alerts for critical readings.
 - Access clinical decision support (medication recommendations, lab suggestions).
 - Manage appointments and export reports (CSV).
@@ -38,7 +38,7 @@ The system is built with a **React frontend**, **Django REST API**, and **Postgr
 
 - **Patient Management** – Full CRUD with detailed medical history (comorbidities, lifestyle, allergies, medications, BMI).
 - **BP Data Collection** – Manual entry via API; extensible for future device integration.
-- **Automated Risk Classification** – Implements WHO/JNC 8 thresholds (Normal, Elevated, Stage 1, Stage 2, Crisis).
+- **Automated Risk Classification** – Implements AHA/ACC thresholds (Normal, Elevated, Stage 1, Stage 2, Crisis).
 - **Interactive Dashboard** – Real‑time stats, trend charts, and time‑of‑day pattern analysis.
 - **Real‑Time Alerts** – Auto‑generated for crisis/stage‑2 readings; clinicians can resolve alerts.
 - **Clinical Decision Support** – Stage‑based medication recommendations, lab investigations, and lifestyle modifications.
@@ -50,7 +50,7 @@ The system is built with a **React frontend**, **Django REST API**, and **Postgr
 
 ---
 
-##  Tech Stack
+## Tech Stack
 
 | Layer | Technology |
 | :--- | :--- |
@@ -66,7 +66,7 @@ The system is built with a **React frontend**, **Django REST API**, and **Postgr
 
 ---
 
-##  System Architecture
+## System Architecture
 
 The system follows a **3‑tier architecture**:
 
@@ -78,7 +78,7 @@ All communication is secured with **JWT tokens** and **HTTPS** (in production).
 
 ---
 
-##  Getting Started
+## Getting Started
 
 Follow these steps to set up the project locally for development and testing.
 
@@ -147,17 +147,20 @@ python manage.py runserver
 The backend API will be available at http://localhost:8000.
 
 Frontend Setup
+
 1. Navigate to the Frontend Directory
 bash
 cd frontend
+
 2. Install Dependencies
 bash
 npm install
+
 3. Set Frontend Environment Variables
 Create a .env file in the frontend folder:
-
 env
 VITE_API_BASE_URL=http://localhost:8000/api
+
 4. Start the React Development Server
 bash
 npm run dev
