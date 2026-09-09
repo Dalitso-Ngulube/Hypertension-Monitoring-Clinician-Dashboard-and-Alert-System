@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.utils import timezone
 
 from .models import BPReading
 
@@ -6,15 +7,17 @@ from .models import BPReading
 class BPReadingSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(source='patient.first_name', read_only=True)
     last_name = serializers.CharField(source='patient.last_name', read_only=True)
+    recorded_at = serializers.DateTimeField(required=False, default=timezone.now)
 
     class Meta:
         model = BPReading
         fields = ['id', 'patient', 'first_name', 'last_name', 'systolic', 'diastolic', 'pulse_rate', 'recorded_at', 'source', 'risk_category', 'created_at']
-        read_only_fields = ['patient', 'risk_category', 'created_at']
+        read_only_fields = ['risk_category', 'created_at']
         extra_kwargs = {
             'systolic': {'required': True},
             'diastolic': {'required': True},
-            'pulse_rate': {'required': True},
+            'pulse_rate': {'required': False},
+            'patient': {'required': True},
         }
 
     def validate(self, data):
