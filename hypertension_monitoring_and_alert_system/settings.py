@@ -289,7 +289,6 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {
         'anon': '50/day',
         'user': '1000/day',
-        'login': '5/hour',
         'create_patient': '10/day',
         'add_reading': '50/day',
     }
