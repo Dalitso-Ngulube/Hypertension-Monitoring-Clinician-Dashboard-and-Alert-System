@@ -13,9 +13,10 @@ class AlertEngine:
         """Create crisis alert for CRISIS readings."""
         if reading.risk_category == 'CRISIS':
             Alert.objects.get_or_create(
-                patient=reading.patient,
+                reading=reading,
                 alert_type='CRISIS',
                 defaults={
+                    'patient': reading.patient,
                     'severity': 'CRITICAL',
                     'message': f'CRISIS reading: {reading.systolic}/{reading.diastolic} at {reading.recorded_at}',
                 }

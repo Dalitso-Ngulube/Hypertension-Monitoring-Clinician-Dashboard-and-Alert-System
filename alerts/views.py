@@ -14,11 +14,11 @@ class AlertListCreateView(generics.ListCreateAPIView):
     def get_queryset(self):
         user = self.request.user
         if user.role == 'admin':
-            return Alert.objects.all()
+            return Alert.objects.select_related('patient').all()
         elif user.role == 'clinician':
-            return Alert.objects.filter(patient__clinician=user)
+            return Alert.objects.select_related('patient').filter(patient__clinician=user)
         else:  # patient role
-            return Alert.objects.filter(patient__user=user)
+            return Alert.objects.select_related('patient').filter(patient__user=user)
 
     def perform_create(self, serializer):
         user = self.request.user
@@ -73,5 +73,5 @@ class UnresolvedAlertsView(generics.ListAPIView):
     def get_queryset(self):
         user = self.request.user
         if user.role == 'admin':
-            return Alert.objects.filter(is_resolved=False)
-        return Alert.objects.filter(is_resolved=False, patient__clinician=user)
+            return Alert.objects.select_related('patient').filter(is_resolved=False)
+        return Alert.objects.select_related('patient').filter(is_resolved=False, patient__clinician=user)

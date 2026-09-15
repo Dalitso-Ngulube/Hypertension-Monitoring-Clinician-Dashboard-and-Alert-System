@@ -1,5 +1,7 @@
 import pytest
 from django.core.exceptions import ValidationError
+from alerts.models import Alert
+from alerts.services import AlertEngine
 from tests.factories import BPReadingFactory, PatientFactory
 
 pytestmark = pytest.mark.django_db
@@ -23,3 +25,18 @@ class TestBPReadingModel:
         patient = PatientFactory(first_name="Jane")
         reading = BPReadingFactory(patient=patient, systolic=120, diastolic=80)
         assert str(reading) == f"{patient} - 120/80"
+
+    def test_crisis_alerts_are_keyed_to_individual_readings(self):
+        patient = PatientFactory()
+        first_reading = BPReadingFactory(patient=patient, systolic=190, diastolic=110)
+        second_reading = BPReadingFactory(patient=patient, systolic=200, diastolic=115)
+
+        AlertEngine.check_crisis(first_reading)
+        AlertEngine.check_crisis(second_reading)
+
+        alerts = Alert.objects.filter(patient=patient, alert_type='CRISIS')
+        assert alerts.count() == 2
+        assert set(alerts.values_list('reading_id', flat=True)) == {
+            first_reading.id,
+            second_reading.id,
+        }

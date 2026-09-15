@@ -15,6 +15,13 @@ class Alert(models.Model):
         on_delete=models.CASCADE,
         related_name='alerts'
     )
+    reading = models.ForeignKey(
+        'bp_readings.BPReading',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='alerts',
+    )
     alert_type = models.CharField(max_length=50, null=True, blank=True)
     severity = models.CharField(
         max_length=20,
