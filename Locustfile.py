@@ -1,20 +1,24 @@
+import os
+
 from locust import HttpUser, task, between
 
 class HypertensionUser(HttpUser):
     wait_time = between(1, 3)
 
     def on_start(self):
-        # Login and store the token
+        username = os.environ.get("LOCUST_USERNAME")
+        password = os.environ.get("LOCUST_PASSWORD")
+        if not username or not password:
+            raise RuntimeError("LOCUST_USERNAME and LOCUST_PASSWORD must be set")
+
         response = self.client.post("/api/auth/login/", json={
-            "username": "clinician1",
-            "password": "DemoPass123!"
+            "username": username,
+            "password": password,
         })
         if response.status_code == 200:
             token = response.json().get("access")
             if token:
-                # Store the token in the user's session
                 self.token = token
-                # Set the Authorization header for all future requests
                 self.client.headers.update({
                     "Authorization": f"Bearer {token}"
                 })

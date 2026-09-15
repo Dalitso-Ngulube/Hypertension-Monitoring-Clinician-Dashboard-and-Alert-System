@@ -281,7 +281,7 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 500,
+    'PAGE_SIZE': 100,
     'DEFAULT_THROTTLE_CLASSES': [
         'rest_framework.throttling.AnonRateThrottle',
         'rest_framework.throttling.UserRateThrottle',
@@ -293,6 +293,15 @@ REST_FRAMEWORK = {
         'add_reading': '50/day',
     }
 }
+
+# ============================================
+# LOAD-TEST OVERRIDES — only active with LOAD_TEST=1
+# ============================================
+if os.getenv('LOAD_TEST') == '1':
+    PASSWORD_HASHERS = [
+        'django.contrib.auth.hashers.MD5PasswordHasher',
+    ]
+    REST_FRAMEWORK['DEFAULT_THROTTLE_CLASSES'] = []
 
 # ============================================
 # SECURITY: Email Configuration
