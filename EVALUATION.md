@@ -1,49 +1,76 @@
-# Evaluation Report – Hypertension Monitoring System
----
+# Evaluation Report: Hypertension Monitoring System
 
-## 1. Executive Summary
+Run date: 15 September 2026
 
-The Hypertension Monitoring System was evaluated against the AHA/ACC guidelines rather than the initially proposed WHO criteria. This pivot was driven by the clinical advantage of the AHA/ACC framework, which establishes a more stringent threshold (130/80 mmHg). This lower threshold enables clinical staff to identify risks early and initiate lifestyle modifications before patients require pharmacological management. Furthermore, the AHA/ACC criteria explicitly accommodate Home Blood Pressure Monitoring (HBPM) and account for White-coat hypertension, aligning perfectly with the system's remote deployment goals. All technical specifications have been successfully met or exceeded. The System Usability Scale (SUS) evaluation remains the sole pending metric requiring real users.
+## 1. Reference-set classification results
 
-| Criterion | Result | Threshold | Status |
-|-----------|--------|-----------|--------|
-| Classification Accuracy | 100% | ≥90% | Pass |
-| Alert Sensitivity | 94.74% (per reading) | ≥90% | Pass |
-| Alert Specificity | 100% | ≥85% | Pass |
-| API Response Time (single request) | ~200 ms | ≤2s | Pass |
-| API Response Time (50 concurrent users) | 95th %ile: ~720 ms | ≤2s | Pass |
-| Scalability (10k records, 50 users) | Passed | ≤2s | Pass |
-| Security Checks | All pass | All pass | Pass |
-| SUS Usability Score | Pending (requires 5+ users) | ≥70 | Pending |
+Reference file: `analytics/reference_readings.csv` (50 readings, ten per
+category). Each row cites the AHA/ACC 2017 guideline BP categories table in
+the `source` column. This is a standards-based reference set, not
+clinician-confirmed patient data.
 
----
+Overall accuracy: **100.00%** (`50/50`) | Status: **PASS** against the
+reference labels.
 
-## 2. Methodology
+### Confusion matrix
 
-All tests were executed on the live development environment running on `localhost:8000`. The backend was served using **Waitress** (production WSGI server) with 16 threads to handle concurrency. The database contained seeded data comprising:
+Rows are expected categories; columns are predicted categories.
 
-- 50 patients
-- 200 BP readings (with historical timestamps spread over several days)
-- Various alerts, appointments, and user records
+| Expected \ Predicted | NORMAL | ELEVATED | STAGE_1 | STAGE_2 | CRISIS |
+|---|---:|---:|---:|---:|---:|
+| NORMAL   | 10 | 0 | 0 | 0 | 0 |
+| ELEVATED | 0 | 10 | 0 | 0 | 0 |
+| STAGE_1  | 0 | 0 | 10 | 0 | 0 |
+| STAGE_2  | 0 | 0 | 0 | 10 | 0 |
+| CRISIS   | 0 | 0 | 0 | 0 | 10 |
 
-### 2.1 Tools Used
+### Per-category metrics
 
-| Tool | Purpose |
-|------|---------|
-| `pytest` | Unit and integration testing (75 tests) |
-| `python manage.py evaluate` | Classification accuracy and alert sensitivity calculation |
-| `requests` + Python | Single‑request API response time measurement |
-| **Locust** | Scalability testing with 50 concurrent users |
-| Manual inspection | Security and logging checks |
+| Category | TP | FN | FP | TN | Sensitivity | Specificity |
+|---|---:|---:|---:|---:|---:|---:|
+| NORMAL   | 10 | 0 | 0 | 40 | 100.00% | 100.00% |
+| ELEVATED | 10 | 0 | 0 | 40 | 100.00% | 100.00% |
+| STAGE_1  | 10 | 0 | 0 | 40 | 100.00% | 100.00% |
+| STAGE_2  | 10 | 0 | 0 | 40 | 100.00% | 100.00% |
+| CRISIS   | 10 | 0 | 0 | 40 | 100.00% | 100.00% |
 
----
+The implementation classified every cited boundary, systolic-only,
+diastolic-only, and mixed case as expected. These results establish agreement
+with the independently coded reference table; they do not establish clinical
+validity or replace clinician review.
 
-## 3. Classification Accuracy
+The production classifier used by `BPReading.save()` and the independent
+reference classifier used by `analytics/evaluation.py` are currently identical
+implementations of the AHA/ACC threshold table. The reference classifier is
+still kept separate in the evaluation path so that any future divergence is
+detected rather than hidden by comparing a model value with the same function
+that produced it.
 
-**Test:** Compare the stored `risk_category` of each BP reading with the output of the AHA/ACC classifier (`classify_bp`) for all 200 readings.
+## 2. Reference-set provenance
 
-**Result:** 100% – all readings are correctly classified.
+The `source` value on every row is `AHA/ACC 2017 Guideline BP categories
+table`. The expected labels follow the 2017 ACC/AHA thresholds: normal,
+elevated, stage 1, stage 2, and crisis. A clinician sign-off is still required
+before describing this file as clinically labelled. Reviewer name and date:
+**pending**.
 
-**Command:**
+## 3. Alert evaluation
+
+Crisis alerts are keyed by the `Alert.reading` foreign key and alert type, so
+repeated crisis readings for one patient are evaluated individually. The
+report counts true positives, missed crisis alerts, false crisis alerts, and
+true negatives per reading.
+
+The 15 September 2026 evaluation database contains 500 readings, including 56
+crisis and 444 non-crisis readings. Crisis sensitivity and specificity are
+therefore measurable.
+
+| Metric | Result | Counts | Status |
+|---|---:|---|---|
+| Sensitivity | 100.00% | TP 56, FN 0; crisis readings 56 | PASS |
+| Specificity | 100.00% | FP 0, TN 444; non-crisis readings 444 | PASS |
+
+Run command:
+
 ```bash
-python manage.py evaluate
+python manage.py evaluate --json

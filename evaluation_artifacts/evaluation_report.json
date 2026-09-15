@@ -1,0 +1,111 @@
+{
+  "timestamp": "2026-09-15 13:27:20.045315+00:00",
+  "classification_accuracy": {
+    "accuracy": 100.0,
+    "total": 50,
+    "correct": 50,
+    "confusion_matrix": {
+      "NORMAL->NORMAL": 10,
+      "ELEVATED->ELEVATED": 10,
+      "STAGE_1->STAGE_1": 10,
+      "STAGE_2->STAGE_2": 10,
+      "CRISIS->CRISIS": 10
+    },
+    "per_category": {
+      "NORMAL": {
+        "true_positive": 10,
+        "false_negative": 0,
+        "false_positive": 0,
+        "true_negative": 40,
+        "sensitivity": 100.0,
+        "specificity": 100.0
+      },
+      "ELEVATED": {
+        "true_positive": 10,
+        "false_negative": 0,
+        "false_positive": 0,
+        "true_negative": 40,
+        "sensitivity": 100.0,
+        "specificity": 100.0
+      },
+      "STAGE_1": {
+        "true_positive": 10,
+        "false_negative": 0,
+        "false_positive": 0,
+        "true_negative": 40,
+        "sensitivity": 100.0,
+        "specificity": 100.0
+      },
+      "STAGE_2": {
+        "true_positive": 10,
+        "false_negative": 0,
+        "false_positive": 0,
+        "true_negative": 40,
+        "sensitivity": 100.0,
+        "specificity": 100.0
+      },
+      "CRISIS": {
+        "true_positive": 10,
+        "false_negative": 0,
+        "false_positive": 0,
+        "true_negative": 40,
+        "sensitivity": 100.0,
+        "specificity": 100.0
+      }
+    },
+    "reference_set": "C:\\Users\\dalit\\Hypertension-Monitoring-Clinician-Dashboard-and-Alert-System\\analytics\\reference_readings.csv"
+  },
+  "alert_performance": {
+    "sensitivity": 100.0,
+    "sensitivity_status": "measured",
+    "specificity": 100.0,
+    "true_positive": 56,
+    "false_negative": 0,
+    "false_positive": 0,
+    "true_negative": 444,
+    "total_crisis_readings": 56,
+    "alerted_crisis_readings": 56,
+    "missed_alerts": 0,
+    "total_non_crisis_readings": 444,
+    "false_crisis_alerts": 0
+  },
+  "total_patients": 52,
+  "total_readings": 500,
+  "total_alerts": 168,
+  "alerts_by_severity": [
+    {
+      "severity": "MEDIUM",
+      "count": 50
+    },
+    {
+      "severity": "CRITICAL",
+      "count": 74
+    },
+    {
+      "severity": "HIGH",
+      "count": 44
+    }
+  ],
+  "readings_by_risk": [
+    {
+      "risk_category": "CRISIS",
+      "count": 56
+    },
+    {
+      "risk_category": "NORMAL",
+      "count": 98
+    },
+    {
+      "risk_category": "STAGE_1",
+      "count": 129
+    },
+    {
+      "risk_category": "ELEVATED",
+      "count": 67
+    },
+    {
+      "risk_category": "STAGE_2",
+      "count": 150
+    }
+  ]
+}

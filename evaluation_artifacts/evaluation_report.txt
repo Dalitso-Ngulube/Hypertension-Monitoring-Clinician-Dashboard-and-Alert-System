@@ -1,0 +1,34 @@
+
+============================================================
+EVALUATION REPORT - Hypertension Monitoring System
+============================================================
+
+[Reference-set Classification Accuracy (AHA/ACC)]: 100.0%
+   Total Readings: 50
+   Correctly Classified: 50
+
+[Alert Performance]:
+   Sensitivity: 100.0%
+   Specificity: 100.0%
+   Total Crisis Readings: 56
+   Crisis Readings Alerted: 56
+   Missed Alerts: 0
+
+[System Overview]:
+   Total Patients: 52
+   Total Readings: 500
+   Total Alerts: 168
+
+[Readings by Risk Category]:
+   CRISIS: 56
+   NORMAL: 98
+   STAGE_1: 129
+   ELEVATED: 67
+   STAGE_2: 150
+
+[Alerts by Severity]:
+   MEDIUM: 50
+   CRITICAL: 74
+   HIGH: 44
+
+============================================================

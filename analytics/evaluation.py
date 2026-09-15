@@ -1,4 +1,7 @@
 
+import csv
+from pathlib import Path
+
 from django.db.models import Count
 from django.utils import timezone
 
@@ -7,10 +10,38 @@ from bp_readings.models import BPReading
 from core.utils import classify_bp
 from patients.models import Patient
 
+REFERENCE_SET = Path(__file__).with_name('reference_readings.csv')
+RISK_CATEGORIES = ('NORMAL', 'ELEVATED', 'STAGE_1', 'STAGE_2', 'CRISIS')
+
+
+def _reference_classify(systolic, diastolic):
+    if systolic > 180 or diastolic > 120:
+        return 'CRISIS'
+    if systolic >= 140 or diastolic >= 90:
+        return 'STAGE_2'
+    if systolic >= 130 or diastolic >= 80:
+        return 'STAGE_1'
+    if systolic >= 120 and diastolic < 80:
+        return 'ELEVATED'
+    return 'NORMAL'
+
+
+def _reference_readings():
+    with REFERENCE_SET.open(newline='', encoding='ascii') as reference_file:
+        return [
+            {
+                'id': row['id'],
+                'systolic': int(row['systolic']),
+                'diastolic': int(row['diastolic']),
+                'expected': row['expected_category'],
+            }
+            for row in csv.DictReader(reference_file)
+        ]
+
 
 def evaluate_classification_accuracy():
-    readings = BPReading.objects.all()
-    total = readings.count()
+    readings = _reference_readings()
+    total = len(readings)
 
     if total == 0:
         return {
@@ -24,8 +55,8 @@ def evaluate_classification_accuracy():
     confusion = {}
 
     for reading in readings:
-        expected = classify_bp(reading.systolic, reading.diastolic)
-        actual = reading.risk_category
+        expected = reading['expected']
+        actual = classify_bp(reading['systolic'], reading['diastolic'])
 
         if expected == actual:
             correct += 1
@@ -33,32 +64,72 @@ def evaluate_classification_accuracy():
         key = f"{expected}->{actual}"
         confusion[key] = confusion.get(key, 0) + 1
 
+    per_category = {}
+    for category in RISK_CATEGORIES:
+        true_positive = confusion.get(f'{category}->{category}', 0)
+        false_negative = sum(
+            count for key, count in confusion.items()
+            if key.startswith(f'{category}->') and key != f'{category}->{category}'
+        )
+        false_positive = sum(
+            count for key, count in confusion.items()
+            if key.endswith(f'->{category}') and key != f'{category}->{category}'
+        )
+        true_negative = total - true_positive - false_negative - false_positive
+        per_category[category] = {
+            'true_positive': true_positive,
+            'false_negative': false_negative,
+            'false_positive': false_positive,
+            'true_negative': true_negative,
+            'sensitivity': round(true_positive / (true_positive + false_negative) * 100, 2)
+            if true_positive + false_negative else 0,
+            'specificity': round(true_negative / (true_negative + false_positive) * 100, 2)
+            if true_negative + false_positive else 0,
+        }
+
     return {
         'accuracy': round((correct / total) * 100, 2),
         'total': total,
         'correct': correct,
-        'confusion_matrix': confusion
+        'confusion_matrix': confusion,
+        'per_category': per_category,
+        'reference_set': str(REFERENCE_SET),
     }
 
 
 def evaluate_alert_sensitivity():
-    crisis_readings = BPReading.objects.filter(risk_category='CRISIS')
-    total_crisis_readings = crisis_readings.count()
+    readings = list(BPReading.objects.all())
+    crisis_readings = [
+        reading for reading in readings
+        if _reference_classify(reading.systolic, reading.diastolic) == 'CRISIS'
+    ]
+    non_crisis_readings = [reading for reading in readings if reading not in crisis_readings]
 
-    crisis_alerts = Alert.objects.filter(alert_type='CRISIS')
-    total_crisis_alerts = crisis_alerts.count()
+    def has_alert(reading):
+        return Alert.objects.filter(
+            reading=reading,
+            alert_type='CRISIS',
+        ).exists()
 
-    patients_with_crisis = crisis_readings.values('patient').distinct().count()
-    patients_with_alert = crisis_alerts.values('patient').distinct().count()
+    alerted_crisis = sum(has_alert(reading) for reading in crisis_readings)
+    false_crisis_alerts = sum(has_alert(reading) for reading in non_crisis_readings)
+    total_crisis_readings = len(crisis_readings)
+    total_non_crisis_readings = len(non_crisis_readings)
 
     return {
-        'sensitivity_per_reading': round((total_crisis_alerts / total_crisis_readings) * 100, 2) if total_crisis_readings else 0,
-        'sensitivity_per_patient': round((patients_with_alert / patients_with_crisis) * 100, 2) if patients_with_crisis else 0,
+        'sensitivity': round((alerted_crisis / total_crisis_readings) * 100, 2) if total_crisis_readings else None,
+        'sensitivity_status': 'measured' if total_crisis_readings else 'not_evaluable_no_crisis_readings',
+        'specificity': round((total_non_crisis_readings - false_crisis_alerts) / total_non_crisis_readings * 100, 2)
+        if total_non_crisis_readings else 0,
+        'true_positive': alerted_crisis,
+        'false_negative': total_crisis_readings - alerted_crisis,
+        'false_positive': false_crisis_alerts,
+        'true_negative': total_non_crisis_readings - false_crisis_alerts,
         'total_crisis_readings': total_crisis_readings,
-        'total_crisis_alerts': total_crisis_alerts,
-        'patients_with_crisis': patients_with_crisis,
-        'patients_with_alert': patients_with_alert,
-        'missed_alerts': total_crisis_readings - total_crisis_alerts
+        'alerted_crisis_readings': alerted_crisis,
+        'missed_alerts': total_crisis_readings - alerted_crisis,
+        'total_non_crisis_readings': total_non_crisis_readings,
+        'false_crisis_alerts': false_crisis_alerts,
     }
 
 
@@ -83,17 +154,17 @@ def print_evaluation_report():
     print("\n" + "="*60)
     print("EVALUATION REPORT - Hypertension Monitoring System")
     print("="*60)
-    print(f"\n[Classification Accuracy (AHA/ACC)]: {report['classification_accuracy']['accuracy']}%")
+    print(f"\n[Reference-set Classification Accuracy (AHA/ACC)]: {report['classification_accuracy']['accuracy']}%")
     print(f"   Total Readings: {report['classification_accuracy']['total']}")
     print(f"   Correctly Classified: {report['classification_accuracy']['correct']}")
 
-    print("\n[Alert Sensitivity]:")
-    print(f"   Per Reading: {report['alert_performance']['sensitivity_per_reading']}%")
-    print(f"   Per Patient: {report['alert_performance']['sensitivity_per_patient']}%")
+    print("\n[Alert Performance]:")
+    sensitivity = report['alert_performance']['sensitivity']
+    sensitivity_display = f'{sensitivity}%' if sensitivity is not None else 'Not evaluable (no crisis readings)'
+    print(f"   Sensitivity: {sensitivity_display}")
+    print(f"   Specificity: {report['alert_performance']['specificity']}%")
     print(f"   Total Crisis Readings: {report['alert_performance']['total_crisis_readings']}")
-    print(f"   Crisis Alerts Generated: {report['alert_performance']['total_crisis_alerts']}")
-    print(f"   Patients with Crisis: {report['alert_performance']['patients_with_crisis']}")
-    print(f"   Patients with Alerts: {report['alert_performance']['patients_with_alert']}")
+    print(f"   Crisis Readings Alerted: {report['alert_performance']['alerted_crisis_readings']}")
     print(f"   Missed Alerts: {report['alert_performance']['missed_alerts']}")
 
     print("\n[System Overview]:")
