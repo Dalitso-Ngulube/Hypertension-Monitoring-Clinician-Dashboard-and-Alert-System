@@ -44,8 +44,8 @@ INSTALLED_APPS = [
     'appointments',
     'notifications',
     'tests',
+    'django_extensions',
 ]
-
 # ============================================
 # SECURITY: Middleware
 # ============================================

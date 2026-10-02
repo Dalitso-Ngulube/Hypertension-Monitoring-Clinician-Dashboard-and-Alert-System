@@ -2,6 +2,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions
 from rest_framework.exceptions import PermissionDenied
 
+from accounts.permissions import IsClinicianOrAdmin
 from accounts.permissions import IsOwnerOrClinician
 
 from .models import (
@@ -64,19 +65,19 @@ class PatientMedicalHistoryView(generics.RetrieveUpdateAPIView):
         return super().update(request, *args, **kwargs)
 
 
-class MedicalConditionListView(generics.ListAPIView):
+class MedicalConditionListView(generics.ListCreateAPIView):
     queryset = MedicalCondition.objects.all()
     serializer_class = MedicalConditionSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsClinicianOrAdmin]
 
 
-class AllergyListView(generics.ListAPIView):
+class AllergyListView(generics.ListCreateAPIView):
     queryset = Allergy.objects.all()
     serializer_class = AllergySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsClinicianOrAdmin]
 
 
-class MedicationListView(generics.ListAPIView):
+class MedicationListView(generics.ListCreateAPIView):
     queryset = Medication.objects.all()
     serializer_class = MedicationSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsClinicianOrAdmin]
