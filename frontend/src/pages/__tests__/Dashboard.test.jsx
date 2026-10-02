@@ -48,7 +48,7 @@ describe('Dashboard', () => {
     renderWithContext(<Dashboard />);
 
     await waitFor(() => {
-      expect(screen.getByText(/Hi, clinician1/i)).toBeInTheDocument();
+      expect(screen.getByText(/Good (morning|afternoon|evening), clinician1/i)).toBeInTheDocument();
     });
   });
 

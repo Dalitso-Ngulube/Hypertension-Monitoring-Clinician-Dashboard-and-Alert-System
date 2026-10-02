@@ -48,8 +48,7 @@ describe('PatientDashboard', () => {
     renderWithContext(<PatientDashboard />);
 
     await waitFor(() => {
-      expect(screen.getByText('My Health Dashboard')).toBeInTheDocument();
-      expect(screen.getByText('Welcome back, patient1')).toBeInTheDocument();
+      expect(screen.getByText(/Good (morning|afternoon|evening), patient1/i)).toBeInTheDocument();
       expect(screen.getByText('Latest BP')).toBeInTheDocument();
       expect(screen.getByText('140/90')).toBeInTheDocument();
       expect(screen.getByText('Total Readings')).toBeInTheDocument();
