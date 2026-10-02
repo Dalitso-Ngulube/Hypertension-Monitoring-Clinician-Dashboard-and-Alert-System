@@ -22,6 +22,7 @@ export const AuthProvider = ({ children }) => {
       console.log(' User fetched:', response.data);
       setUser(response.data);
       setIsAuthenticated(true);
+      return response.data;
     } catch (error) {
       console.error(' Failed to fetch user:', error);
       if (error.response?.status === 403 || error.response?.status === 401) {
@@ -37,10 +38,10 @@ export const AuthProvider = ({ children }) => {
     fetchUser();
   }, []);
 
-  // Standard login – waits for user fetch before setting authenticated
-  const login = () => {
+  // Standard login – waits for the user profile before protected navigation
+  const login = async () => {
     console.log(' login() called');
-    fetchUser();
+    return fetchUser();
   };
 
   // Immediate login – sets authenticated first, then fetches user in background

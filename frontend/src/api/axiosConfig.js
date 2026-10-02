@@ -29,15 +29,21 @@ api.interceptors.response.use(
   (response) => response, // Pass through successful responses
   async (error) => {
     const originalRequest = error.config;
+    const detail = error.response?.data?.detail;
+    const isAuthenticationFailure =
+      error.response?.status === 401 ||
+      (error.response?.status === 403 && (
+        error.response?.data?.code === 'token_not_valid' ||
+        detail === 'Authentication credentials were not provided.'
+      ));
 
-    // If the error is 401 (Unauthorized) and we haven't tried to refresh yet
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Refresh expired or invalid JWTs once before logging the user out.
+    if (isAuthenticationFailure && !originalRequest._retry && !originalRequest.url?.includes('/auth/token/refresh/')) {
       originalRequest._retry = true;
 
       try {
         const refreshToken = localStorage.getItem('refresh_token');
         if (!refreshToken) {
-          // No refresh token → force logout
           logout();
           return Promise.reject(error);
         }
@@ -60,7 +66,8 @@ api.interceptors.response.use(
       }
     }
 
-    // For other errors, just reject
+    // Permission 403s are preserved for the page to handle; only authentication
+    // failures clear the session above.
     return Promise.reject(error);
   }
 );

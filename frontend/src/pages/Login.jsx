@@ -10,7 +10,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { immediateLogin } = useContext(AuthContext);
+  const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -21,8 +21,11 @@ const Login = () => {
       const response = await api.post('/auth/login/', { username, password });
       localStorage.setItem('access_token', response.data.access);
       localStorage.setItem('refresh_token', response.data.refresh);
-      immediateLogin();
-      navigate('/dashboard');
+      const loggedInUser = await login();
+      if (!loggedInUser) {
+        throw new Error('Unable to load the authenticated user profile.');
+      }
+      navigate(loggedInUser?.role === 'patient' ? '/patient/dashboard' : '/dashboard');
     } catch (err) {
       console.error('Login error:', err);
       let errorMessage = 'Invalid username or password.';
