@@ -31,3 +31,31 @@ class TestAppointmentViewSet:
         }
         response = client.post(url, data)
         assert response.status_code == 201
+
+    def test_patient_can_list_only_their_appointments(self):
+        patient_user = PatientFactory().user
+        patient = PatientFactory(user=patient_user)
+        AppointmentFactory(patient=patient)
+        other_appointment = AppointmentFactory()
+        client = APIClient()
+        client.force_authenticate(user=patient_user)
+
+        response = client.get(reverse('appointment-list'))
+
+        assert response.status_code == 200
+        returned_ids = {item['id'] for item in response.data['results']}
+        assert other_appointment.id not in returned_ids
+
+    def test_patient_cannot_create_appointment(self):
+        patient = PatientFactory()
+        client = APIClient()
+        client.force_authenticate(user=patient.user)
+
+        response = client.post(reverse('appointment-list'), {
+            'patient': patient.id,
+            'date': '2026-09-01',
+            'time': '10:00:00',
+            'reason': 'Checkup',
+        })
+
+        assert response.status_code == 403
