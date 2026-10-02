@@ -36,6 +36,13 @@ const PatientDashboard = () => {
   const [error, setError] = useState('');
   const [summary, setSummary] = useState(null);
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  };
+
   const fetchData = async () => {
     try {
       const readingsRes = await api.get('/bp_readings/');
@@ -100,11 +107,12 @@ const PatientDashboard = () => {
   const latestReading = readings.length > 0 ? readings[0] : null;
 
   return (
-    <div className="container-fluid py-4" style={{ minHeight: '100vh', backgroundColor: 'var(--bg-body)' }}>
+    <div className="container-fluid py-4 dashboard-bg patient-dashboard">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
-          <h1 className="h2 fw-bold">My Health Dashboard</h1>
-          <p className="text-muted small">Welcome back, {user.username}</p>
+          <div className="dashboard-eyebrow">Personal health space</div>
+          <h3 className="dashboard-heading">{getGreeting()}, {user.username}</h3>
+          <p className="dashboard-subheading">A clear view of your blood pressure journey</p>
         </div>
         <button className="btn btn-outline-danger" onClick={logout}>
           Logout

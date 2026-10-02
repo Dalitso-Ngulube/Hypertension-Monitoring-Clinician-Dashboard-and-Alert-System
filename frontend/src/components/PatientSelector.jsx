@@ -25,8 +25,8 @@ const PatientSelector = ({ onSelectPatient }) => {
 
   return (
     <div>
-      <label className="form-label small text-uppercase fw-semibold text-muted">Select Patient</label>
-      <select className="form-select form-select-sm" onChange={(e) => onSelectPatient(parseInt(e.target.value))} defaultValue="">
+      <label className="patient-selector-label form-label small text-uppercase fw-semibold">Select Patient</label>
+      <select className="patient-selector-select form-select form-select-sm" onChange={(e) => onSelectPatient(parseInt(e.target.value))} defaultValue="">
         <option value="">-- Choose a patient --</option>
         {patients.map(p => <option key={p.id} value={p.id}>{p.first_name} {p.last_name} (Age: {p.age})</option>)}
       </select>

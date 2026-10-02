@@ -2,6 +2,8 @@
    CLINICAL COLOR PALETTE
    ============================================================ */
 :root {
+  --font-tondo: 'Tondo', 'Tondo Light', 'Segoe UI', sans-serif;
+  --font-tondo-light: 'Tondo Light', 'Tondo', 'Segoe UI', sans-serif;
   --clinical-50: #f0f4f8;
   --clinical-100: #d9e2ec;
   --clinical-200: #bcccdc;
@@ -43,6 +45,11 @@
   --text-secondary: #4a5568;
   --text-muted: #a0aec0;
   --border-color: #e2e8f0;
+  --sidebar-bg: #ffffff;
+  --sidebar-text: #334e68;
+  --sidebar-muted: #627d98;
+  --sidebar-border: #e2e8f0;
+  --sidebar-hover: rgba(14, 165, 233, 0.1);
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
   --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.10);
@@ -58,6 +65,11 @@
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
   --border-color: #334155;
+  --sidebar-bg: #111827;
+  --sidebar-text: #f8fafc;
+  --sidebar-muted: #94a3b8;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-hover: rgba(96, 165, 250, 0.16);
 }
 
 * {
@@ -67,11 +79,60 @@
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-tondo);
   background-color: var(--bg-body);
   color: var(--text-primary);
   line-height: 1.6;
   transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* Shared light/dark treatment for data tables and search controls. */
+.table {
+  --bs-table-color: var(--text-primary);
+  --bs-table-bg: var(--card-bg);
+  --bs-table-border-color: var(--border-color);
+  --bs-table-hover-color: var(--text-primary);
+  --bs-table-hover-bg: rgba(14, 165, 233, 0.08);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.table thead th {
+  background-color: var(--bg-body);
+  color: var(--text-secondary);
+  border-bottom-color: var(--border-color);
+}
+
+.table tbody td {
+  background-color: var(--card-bg);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.input-group-text,
+.form-control,
+.form-select {
+  background-color: var(--card-bg);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.form-control::placeholder {
+  color: var(--text-muted);
+}
+
+.input-group-text {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .table tbody tr:hover td {
+  background-color: rgba(14, 165, 233, 0.12);
+}
+
+[data-theme="dark"] .form-control:focus,
+[data-theme="dark"] .form-select:focus {
+  background-color: var(--card-bg);
+  color: var(--text-primary);
 }
 
 ::-webkit-scrollbar { width: 4px; height: 4px; }
@@ -89,7 +150,8 @@ a { text-decoration: none; }
 
 /* ===== SIDEBAR ===== */
 .sidebar {
-  background-color: var(--clinical-900);
+  background-color: var(--sidebar-bg);
+  border-right: 1px solid var(--sidebar-border);
   height: 100vh;
   position: fixed;
   top: 0;
@@ -107,7 +169,7 @@ a { text-decoration: none; }
   border: 0 !important;
 }
 .sidebar .nav-link {
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--sidebar-muted);
   border-radius: 8px;
   padding: 0.5rem 0.75rem;
   margin-bottom: 2px;
@@ -118,8 +180,8 @@ a { text-decoration: none; }
 }
 .sidebar .nav-link:hover,
 .sidebar .nav-link.active {
-  color: #fff;
-  background-color: rgba(37, 99, 235, 0.15);
+  color: var(--sidebar-text);
+  background-color: var(--sidebar-hover);
 }
 .sidebar .nav-link .nav-icon {
   display: inline-flex;
@@ -128,7 +190,7 @@ a { text-decoration: none; }
   width: 20px;
 }
 .sidebar .brand {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--sidebar-border);
   padding: 1rem;
   display: flex;
   align-items: center;
@@ -147,47 +209,68 @@ a { text-decoration: none; }
   font-size: 0.9rem;
 }
 .sidebar .logo-text {
-  color: #fff;
+  color: var(--sidebar-text);
   font-weight: 700;
   font-size: 1rem;
 }
 .sidebar-footer {
   margin-top: auto;
   padding: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid var(--sidebar-border);
 }
 .sidebar-footer .user-avatar {
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: var(--medical-500);
+  background: linear-gradient(145deg, var(--medical-400), var(--medical-700));
+  border: 2px solid rgba(255, 255, 255, 0.18);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #fff;
   font-weight: 600;
-  font-size: 0.7rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.25);
   flex-shrink: 0;
 }
+.sidebar-footer > .d-flex { min-width: 0; }
+.sidebar-footer > .d-flex > div:last-child {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
 .sidebar-footer .user-name {
-  color: #fff;
-  font-weight: 500;
-  font-size: 0.9rem;
+  color: var(--sidebar-text);
+  font-family: var(--font-tondo);
+  font-weight: 600;
+  font-size: 0.82rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 125px;
 }
 .sidebar-footer .user-role {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 0;
+  font-family: var(--font-tondo-light);
   font-size: 0.6rem;
+  font-weight: 400;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  flex: left;
-  padding: 0.1rem 0.4rem;
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.5);
-  border-radius: 50px;
+  letter-spacing: 0.1em;
+  padding: 0.2rem 0.5rem;
+  background: var(--sidebar-hover);
+  color: var(--sidebar-muted);
+  border: 1px solid var(--sidebar-border);
+  border-radius: 999px;
 }
 .btn-theme-toggle {
-  background: rgba(255, 255, 255, 0.05);
-  border: none;
-  color: rgba(255, 255, 255, 0.5);
+  background: var(--sidebar-hover);
+  border: 1px solid var(--sidebar-border);
+  color: var(--sidebar-muted);
   padding: 0.3rem 0.75rem;
   border-radius: 8px;
   font-size: 0.8rem;
@@ -195,13 +278,13 @@ a { text-decoration: none; }
   width: 100%;
 }
 .btn-theme-toggle:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: rgba(14, 165, 233, 0.18);
+  color: var(--sidebar-text);
 }
 .btn-logout {
-  background: rgba(239, 68, 68, 0.1);
+  background: rgba(239, 68, 68, 0.08);
   border: none;
-  color: rgba(239, 68, 68, 0.6);
+  color: #dc2626;
   padding: 0.3rem 0.75rem;
   border-radius: 8px;
   font-size: 0.8rem;
@@ -210,6 +293,10 @@ a { text-decoration: none; }
 }
 .btn-logout:hover {
   background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+}
+
+[data-theme="dark"] .btn-logout {
   color: #f87171;
 }
 
@@ -354,6 +441,12 @@ a { text-decoration: none; }
   box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
 }
 .health-score-ring .score-value { font-size: 1.8rem; font-weight: 700; color: #fff; }
+.health-score-center { background: var(--card-bg); }
+.health-score-value { color: var(--text-primary); }
+
+[data-theme="dark"] .health-score-value {
+  color: #fff;
+}
 
 /* ===== ALERTS ===== */
 .alert-item-clinical {
@@ -491,6 +584,271 @@ a { text-decoration: none; }
 
 .dashboard-bg {
   background-color: var(--bg-body);
+  font-family: var(--font-tondo);
+}
+
+.sidebar-page-heading {
+  color: var(--text-primary);
+  font-family: var(--font-tondo);
+  font-size: clamp(0.9rem, 1.5vw, 1.325rem);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.08;
+  margin: 0 0 0.5rem;
+}
+
+.dashboard-eyebrow {
+  color: var(--medical-600);
+  font-family: var(--font-tondo-light);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  line-height: 1.2;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+}
+
+.dashboard-heading {
+  color: var(--text-primary);
+  font-family: var(--font-tondo);
+  font-size: clamp(0.9rem, 1.5vw, 1.325rem);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.08;
+  margin: 0;
+}
+
+.dashboard-subheading {
+  color: var(--text-secondary);
+  font-family: var(--font-tondo-light);
+  font-size: 0.95rem;
+  letter-spacing: 0.01em;
+  margin: 0.65rem 0 0;
+}
+
+[data-theme="dark"] .dashboard-eyebrow {
+  color: #93c5fd;
+}
+
+.dashboard-bg .text-muted,
+.patient-dashboard .text-muted {
+  font-family: var(--font-tondo-light);
+}
+
+.upcoming-appointments {
+  background-color: rgba(37, 99, 235, 0.06);
+  border-radius: 10px;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+
+[data-theme="dark"] .upcoming-appointments {
+  background-color: rgba(96, 165, 250, 0.1);
+}
+
+.calendar-day {
+  width: 32px;
+  height: 32px;
+  margin: 0 auto;
+  padding: 6px 0;
+  border-radius: 50%;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.calendar-day-today {
+  background-color: #fff;
+  color: var(--medical-600);
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.12);
+}
+
+
+.medical-history-panel {
+  height: 100%;
+  border: 1px solid var(--border-color);
+  border-left: 3px solid var(--medical-500);
+  border-radius: 10px;
+  background: var(--card-bg);
+  overflow: hidden;
+}
+
+.medical-history-panel--conditions { border-left-color: #2563eb; }
+.medical-history-panel--allergies { border-left-color: #0ea5e9; }
+.medical-history-panel--medications { border-left-color: #16a34a; }
+.medical-history-panel--comorbidities { border-left-color: #dc2626; }
+
+.medical-history-panel__header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 0;
+  padding: 0.7rem 0.85rem;
+  background: var(--bg-body);
+  color: var(--text-primary);
+  font-family: var(--font-tondo);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.medical-history-panel__header svg:last-child {
+  transition: transform 0.2s ease;
+}
+
+.medical-history-panel__header .rotate-180 {
+  transform: rotate(180deg);
+}
+
+.medical-history-panel__body {
+  padding: 0.8rem;
+}
+
+.medical-history-editor {
+  background: var(--card-bg);
+  color: var(--text-primary);
+}
+
+.medical-history-editor .form-control,
+.medical-history-editor .form-select {
+  background-color: var(--bg-body);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.medical-history-editor .form-control::placeholder {
+  color: var(--text-muted);
+}
+
+.medical-history-editor .form-select option:checked {
+  background: #38bdf8 linear-gradient(#38bdf8, #38bdf8);
+  color: #082f49;
+}
+
+.medical-history-editor .btn-link {
+  color: #0284c7;
+  text-decoration: none;
+}
+
+.medical-history-editor .btn-link:hover {
+  color: #0369a1;
+  text-decoration: underline;
+}
+
+.medical-history-count {
+  display: inline-flex;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0.35rem;
+  border-radius: 999px;
+  background: var(--medical-100);
+  color: var(--medical-700);
+  font-size: 0.65rem;
+}
+
+.medical-history-panel--allergies .medical-history-count {
+  background: #bae6fd;
+  color: #075985;
+}
+
+.comorbidity-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.68rem;
+  font-weight: 600;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.comorbidity-toggle input { margin: 0; }
+.comorbidity-toggle.is-active {
+  background: rgba(220, 38, 38, 0.1);
+  border-color: rgba(220, 38, 38, 0.45);
+  color: #b91c1c;
+}
+
+[data-theme="dark"] .medical-history-panel__header {
+  background: rgba(15, 23, 42, 0.5);
+}
+
+[data-theme="dark"] .medical-history-editor .form-control,
+[data-theme="dark"] .medical-history-editor .form-select {
+  background-color: var(--bg-body);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .medical-history-editor .form-select option {
+  background-color: var(--card-bg);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .medical-history-editor .form-select option:checked {
+  background: #38bdf8 linear-gradient(#38bdf8, #38bdf8);
+  color: #082f49;
+}
+
+[data-theme="dark"] .medical-history-editor .btn-link {
+  color: #7dd3fc;
+}
+
+.patient-details-page {
+  min-height: 100vh;
+  padding: 1.5rem;
+  color: var(--text-primary);
+}
+
+.patient-details-page .card-soft {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .comorbidity-toggle.is-active {
+  color: #fca5a5;
+}
+[data-theme="dark"] .calendar-day-today {
+  color: var(--medical-700);
+}
+
+.dashboard-analytics-link {
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dashboard-analytics-link:hover,
+.dashboard-analytics-link:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.24) !important;
+}
+
+.patient-selector-label {
+  color: var(--text-secondary);
+}
+
+.patient-selector-select {
+  background-color: var(--card-bg);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.patient-selector-select:focus {
+  background-color: var(--card-bg);
+  border-color: var(--medical-400);
+  color: var(--text-primary);
+  box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.2);
+}
+
+[data-theme="dark"] .patient-selector-select option {
+  background-color: var(--card-bg);
+  color: var(--text-primary);
 }
 
 /* ===== FORCE WHITE TEXT IN DARK MODE ===== */

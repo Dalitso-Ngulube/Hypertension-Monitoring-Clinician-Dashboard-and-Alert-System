@@ -31,7 +31,7 @@ const PatientDetails = () => {
   if (!patient) return <div className="text-center py-8 text-slate-400">Patient not found.</div>;
 
   return (
-    <div className="space-y-6">
+    <div className="patient-details-page dashboard-bg">
       {/* Patient Info Card */}
       <div className="card-soft">
         <div className="card-body">

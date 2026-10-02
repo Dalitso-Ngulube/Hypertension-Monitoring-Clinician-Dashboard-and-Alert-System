@@ -81,7 +81,7 @@ const Patients = () => {
     <div className="container-fluid py-4">
       <div className="d-flex flex-wrap justify-content-between align-items-center mb-4">
         <div>
-          <h1 className="h2 fw-bold">Patients</h1>
+          <h1 className="sidebar-page-heading fw-bold">Patients</h1>
           <p className="text-muted small">Manage your patient list</p>
         </div>
         {isClinicianOrAdmin && (

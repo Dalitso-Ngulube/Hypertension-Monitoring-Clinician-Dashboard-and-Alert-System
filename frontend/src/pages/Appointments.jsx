@@ -104,16 +104,20 @@ const Appointments = () => {
 
   if (!user) return null;
 
+  const canManageAppointments = user.role === 'clinician' || user.role === 'admin';
+
   return (
     <div className="container-fluid py-4">
       <div className="d-flex flex-wrap justify-content-between align-items-center mb-4">
         <div>
-          <h1 className="h2 fw-bold">Appointments</h1>
+          <h1 className="sidebar-page-heading fw-bold">Appointments</h1>
           <p className="text-muted small">Manage all patient appointments</p>
         </div>
-        <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-          <Plus size={16} className="me-1" /> Add Appointment
-        </button>
+        {canManageAppointments && (
+          <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+            <Plus size={16} className="me-1" /> Add Appointment
+          </button>
+        )}
       </div>
 
       {loading ? (
@@ -164,10 +168,7 @@ const Appointments = () => {
                   <td>{apt.reason || <span className="text-muted">—</span>}</td>
                   <td>{getStatusBadge(apt.status)}</td>
                   <td className="text-center">
-                    <button
-                      className="btn btn-sm btn-outline-primary"
-                      onClick={() => openDetailModal(apt)}
-                    >
+                    <button className="btn btn-sm btn-outline-primary" onClick={() => openDetailModal(apt)}>
                       <Edit size={14} className="me-1" /> View
                     </button>
                   </td>
@@ -304,7 +305,7 @@ const Appointments = () => {
                   <label className="fw-semibold text-muted small text-uppercase">Current Status</label>
                   <div className="mt-1">{getStatusBadge(selectedAppointment.status)}</div>
                 </div>
-                <div className="mb-3">
+                {canManageAppointments && <div className="mb-3">
                   <label className="fw-semibold text-muted small text-uppercase">Change Status</label>
                   <div className="d-flex gap-2 mt-1">
                     {['SCHEDULED', 'COMPLETED', 'CANCELLED'].map((status) => (
@@ -318,7 +319,7 @@ const Appointments = () => {
                       </button>
                     ))}
                   </div>
-                </div>
+                </div>}
                 {updating && (
                   <div className="text-center text-muted small">Updating...</div>
                 )}

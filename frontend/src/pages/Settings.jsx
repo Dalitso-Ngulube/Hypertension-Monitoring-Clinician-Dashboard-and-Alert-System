@@ -21,7 +21,7 @@ const Settings = () => {
 
   return (
     <div className="container-fluid py-4">
-      <h1 className="h2 fw-bold">Settings</h1>
+      <h1 className="sidebar-page-heading fw-bold">Settings</h1>
       <p className="text-muted small mb-4">Configure your account and application preferences</p>
 
       <div className="row g-4">

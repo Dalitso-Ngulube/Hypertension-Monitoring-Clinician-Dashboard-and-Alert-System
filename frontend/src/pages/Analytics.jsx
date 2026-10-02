@@ -31,7 +31,7 @@ const Analytics = () => {
     <div className="container-fluid py-4">
       <div className="d-flex flex-wrap justify-content-between align-items-center mb-4">
         <div>
-          <h1 className="h2 fw-bold">Analytics</h1>
+          <h1 className="sidebar-page-heading fw-bold">Analytics</h1>
           <p className="text-muted small">Explore detailed patient analytics and trends</p>
         </div>
         <button className="btn btn-primary btn-sm" onClick={() => { const token = localStorage.getItem('access_token'); window.open(`http://localhost:8000/api/analytics/export/summary/?token=${token}`, '_blank'); }}>

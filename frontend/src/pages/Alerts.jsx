@@ -46,7 +46,7 @@ const Alerts = () => {
     <div className="container-fluid py-4">
       <div className="d-flex flex-wrap justify-content-between align-items-center mb-4">
         <div>
-          <h1 className="h2 fw-bold">Alerts</h1>
+          <h1 className="sidebar-page-heading fw-bold">Alerts</h1>
           <p className="text-muted small">View and manage all patient alerts</p>
         </div>
         <button className="btn btn-outline-secondary btn-sm" onClick={fetchAlerts}>

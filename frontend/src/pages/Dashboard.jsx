@@ -9,11 +9,18 @@ import AlertsList from '../components/AlertsList';
 import AddPatientModal from '../components/AddPatientModal';
 import AppointmentCalendar from '../components/AppointmentCalendar';
 import api from '../api/axiosConfig';
-import { Users, Activity, AlertTriangle, HeartPulse, Calendar, Heart, TrendingUp, ArrowRight } from 'lucide-react';
+import { Users, Activity, AlertTriangle, HeartPulse, Calendar, TrendingUp, ArrowRight } from 'lucide-react';
 
 const Dashboard = () => {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  };
 
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [patientDetails, setPatientDetails] = useState(null);
@@ -92,8 +99,9 @@ const Dashboard = () => {
     <div className="container-fluid py-4 dashboard-bg">
       <div className="row align-items-center mb-4">
         <div className="col-md-8">
-          <h1 className="display-6 fw-bold">Hi, {user?.username}</h1>
-          <p className="text-muted small">Here's your clinical overview for today</p>
+          <div className="dashboard-eyebrow">Clinician workspace</div>
+          <h3 className="dashboard-heading">{getGreeting()}, {user?.username}</h3>
+          <p className="dashboard-subheading">Your clinical overview for today</p>
         </div>
         <div className="col-md-4 text-md-end">
           <span className="bg-white border rounded-3 px-3 py-2 d-inline-flex align-items-center shadow-sm">
@@ -178,41 +186,28 @@ const Dashboard = () => {
                 background: `conic-gradient(#2563eb 0% ${getHealthScore()}%, #e2e8f0 ${getHealthScore()}% 100%)`,
               }}
             >
-              <div className="bg-white rounded-circle w-100 h-100 d-flex align-items-center justify-content-center">
-                <span className="fw-bold fs-2">{getHealthScore()}%</span>
+              <div className="health-score-center rounded-circle w-100 h-100 d-flex align-items-center justify-content-center">
+                <span className="health-score-value fw-bold fs-2">{getHealthScore()}%</span>
               </div>
             </div>
             <h5 className="fw-bold mt-2">Overall Health Status</h5>
             <p className="text-muted small">{totalReadings} readings • {crisisReadings} crisis events</p>
           </div>
 
-          <div className="card card-clinical mb-3">
-            <div className="card-body">
-              <div className="d-flex justify-content-between align-items-center">
-                <div>
-                  <h6 className="fw-semibold mb-1">Heart Function</h6>
-                  <p className="h3 fw-bold mb-1">{getHealthScore()}%</p>
-                  <span className="badge bg-warning text-dark">Moderate</span>
-                </div>
-                <div className="bg-primary bg-opacity-10 rounded-circle p-3">
-                  <Heart size={28} className="text-primary" />
-                </div>
-              </div>
-              <div className="mt-3 pt-2 border-top">
-                <div className="d-flex justify-content-between small">
-                  <span className="text-muted">Oxygen Saturation</span>
-                  <span className="fw-semibold text-success">96%</span>
-                </div>
-                <div className="progress mt-1" style={{ height: '6px' }}>
-                  <div className="progress-bar bg-success" style={{ width: '96%' }} />
-                </div>
-              </div>
-            </div>
-          </div>
-
           <AppointmentCalendar />
 
-          <div className="card bg-primary text-white border-0 mt-3 shadow-sm">
+          <div
+            className="card bg-primary text-white border-0 mt-3 shadow-sm dashboard-analytics-link"
+            role="button"
+            tabIndex={0}
+            onClick={() => navigate('/analytics')}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                navigate('/analytics');
+              }
+            }}
+          >
             <div className="card-body d-flex justify-content-between align-items-center">
               <div>
                 <p className="fw-semibold mb-0">Get Started</p>
