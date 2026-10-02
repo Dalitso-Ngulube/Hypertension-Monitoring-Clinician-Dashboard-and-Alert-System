@@ -79,7 +79,16 @@ const AppointmentCalendar = () => {
     return appointments.filter((a) => a.date === dateStr);
   };
 
-  const formatDate = (date) => date.toISOString().split('T')[0];
+  const formatDate = (date) => {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).formatToParts(date);
+    const values = Object.fromEntries(parts.map(({ type, value }) => [type, value]));
+    return `${values.year}-${values.month}-${values.day}`;
+  };
 
   // Build calendar grid
   const year = currentDate.getFullYear();
@@ -185,15 +194,11 @@ const AppointmentCalendar = () => {
                         style={{ opacity: isCurrentMonth ? 1 : 0.3 }}
                       >
                         <div
-                          className={`small fw-semibold ${
-                            isToday ? 'text-primary' : isCurrentMonth ? 'text-dark' : ''
+                          className={`calendar-day small fw-semibold ${
+                            isToday ? 'calendar-day-today' : isCurrentMonth ? 'text-dark' : ''
                           }`}
                           style={{
-                            width: '100%',
-                            padding: '4px 0',
-                            borderRadius: '50%',
-                            backgroundColor: isToday ? 'var(--medical-100)' : 'transparent',
-                            transition: 'background-color 0.15s ease',
+                            opacity: isCurrentMonth ? 1 : 0.3,
                           }}
                         >
                           {cell.day}
@@ -205,8 +210,8 @@ const AppointmentCalendar = () => {
               ))}
             </div>
 
-            {/* Upcoming Appointments with light green background */}
-            <div className="mt-4 pt-3 border-top border-light" style={lightGreenBg}>
+            {/* Upcoming Appointments with a subtle calendar-blue tint */}
+            <div className="upcoming-appointments mt-4 pt-3 border-top border-light">
               <h6 className="small fw-semibold text-muted">Upcoming Appointments</h6>
               {upcomingAppointments.length === 0 ? (
                 <p className="text-muted small">No appointments in the next 7 days.</p>
