@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import api from '../api/axiosConfig';
-import { Save, Activity, Pill, Stethoscope, Heart, User, Phone, Calendar, AlertCircle } from 'lucide-react';
+import { Save, Activity, Pill, Stethoscope, Heart, User, Phone, Calendar, AlertCircle, Plus, ChevronDown } from 'lucide-react';
 
 const MedicalHistory = ({ patientId, onUpdate }) => {
   const { user } = useContext(AuthContext);
@@ -13,6 +13,9 @@ const MedicalHistory = ({ patientId, onUpdate }) => {
   const [selectedConditions, setSelectedConditions] = useState([]);
   const [selectedAllergies, setSelectedAllergies] = useState([]);
   const [selectedMedications, setSelectedMedications] = useState([]);
+  const [openSections, setOpenSections] = useState({ conditions: true, allergies: true, medications: true, comorbidities: true });
+  const [addingItem, setAddingItem] = useState(null);
+  const [newItemName, setNewItemName] = useState('');
   const [formData, setFormData] = useState({
     condition_notes: '', allergy_notes: '', current_medication_notes: '',
     has_diabetes: false, has_kidney_disease: false, has_heart_disease: false, has_stroke_history: false, comorbidity_notes: '',
@@ -121,11 +124,45 @@ const MedicalHistory = ({ patientId, onUpdate }) => {
     setter(values);
   };
 
+  const toggleSection = (section) => {
+    setOpenSections((current) => ({ ...current, [section]: !current[section] }));
+  };
+
+  const addReferenceItem = async (type) => {
+    const name = newItemName.trim();
+    if (!name) return;
+    const endpoint = type === 'condition'
+      ? '/patients/reference/conditions/'
+      : type === 'allergy'
+        ? '/patients/reference/allergies/'
+        : '/patients/reference/medications/';
+    const payload = type === 'allergy'
+      ? { name, severity: 'MILD' }
+      : { name, category: 'OTHER' };
+    try {
+      const response = await api.post(endpoint, payload);
+      if (type === 'condition') {
+        setConditions((current) => [...current, response.data]);
+        setSelectedConditions((current) => [...current, response.data.id]);
+      } else if (type === 'allergy') {
+        setAllergies((current) => [...current, response.data]);
+        setSelectedAllergies((current) => [...current, response.data.id]);
+      } else {
+        setMedications((current) => [...current, response.data]);
+        setSelectedMedications((current) => [...current, response.data.id]);
+      }
+      setNewItemName('');
+      setAddingItem(null);
+    } catch (error) {
+      console.error(`Error adding ${type}:`, error);
+    }
+  };
+
   if (loading) return <div className="text-center py-4 text-muted">Loading medical history...</div>;
   if (!isClinicianOrAdmin) return <div className="text-center py-4 text-muted">You don't have permission to view medical history.</div>;
 
   return (
-    <div className="card card-clinical">
+    <div className="card card-clinical medical-history-editor">
       <div className="card-header d-flex justify-content-between align-items-center">
         <span><Activity size={16} className="me-2" /> Medical History</span>
         <button className="btn btn-primary btn-sm" onClick={handleSave} disabled={saving}>
@@ -135,90 +172,91 @@ const MedicalHistory = ({ patientId, onUpdate }) => {
       <div className="card-body">
         <div className="row g-3">
           <div className="col-md-6">
-            <label className="form-label small fw-semibold text-muted text-uppercase"><Stethoscope size={14} className="me-1" /> Conditions</label>
-            <select
-              multiple
-              className="form-select form-select-sm"
-              value={selectedConditions}
-              onChange={(e) => handleMultiSelect(e, setSelectedConditions)}
-              style={{ height: '100px' }}
-            >
-              {Array.isArray(conditions) && conditions.map(c => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-            <input
-              type="text"
-              className="form-control form-control-sm mt-1"
-              placeholder="Condition notes..."
-              value={formData.condition_notes}
-              onChange={(e) => setFormData({ ...formData, condition_notes: e.target.value })}
-            />
+            <div className="medical-history-panel medical-history-panel--conditions">
+              <button type="button" className="medical-history-panel__header" onClick={() => toggleSection('conditions')}>
+                <span><Stethoscope size={14} className="me-1" /> Conditions <span className="medical-history-count">{selectedConditions.length}</span></span>
+                <ChevronDown size={16} className={openSections.conditions ? 'rotate-180' : ''} />
+              </button>
+              {openSections.conditions && <div className="medical-history-panel__body">
+                <select multiple className="form-select form-select-sm" value={selectedConditions} onChange={(e) => handleMultiSelect(e, setSelectedConditions)} style={{ height: '100px' }}>
+                  {Array.isArray(conditions) && conditions.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+                <button type="button" className="btn btn-link btn-sm px-0" onClick={() => setAddingItem(addingItem === 'condition' ? null : 'condition')}><Plus size={13} /> Add condition</button>
+                {addingItem === 'condition' && <div className="input-group input-group-sm mb-1">
+                  <input className="form-control" value={newItemName} onChange={(e) => setNewItemName(e.target.value)} placeholder="Condition name" />
+                  <button type="button" className="btn btn-primary" onClick={() => addReferenceItem('condition')}>Add</button>
+                </div>}
+                <input type="text" className="form-control form-control-sm mt-1" placeholder="Condition notes..." value={formData.condition_notes} onChange={(e) => setFormData({ ...formData, condition_notes: e.target.value })} />
+              </div>}
+            </div>
           </div>
           <div className="col-md-6">
-            <label className="form-label small fw-semibold text-muted text-uppercase"><AlertCircle size={14} className="me-1" /> Allergies</label>
-            <select
-              multiple
-              className="form-select form-select-sm"
-              value={selectedAllergies}
-              onChange={(e) => handleMultiSelect(e, setSelectedAllergies)}
-              style={{ height: '100px' }}
-            >
-              {Array.isArray(allergies) && allergies.map(a => (
-                <option key={a.id} value={a.id}>{a.name} ({a.severity})</option>
-              ))}
-            </select>
-            <input
-              type="text"
-              className="form-control form-control-sm mt-1"
-              placeholder="Allergy notes..."
-              value={formData.allergy_notes}
-              onChange={(e) => setFormData({ ...formData, allergy_notes: e.target.value })}
-            />
+            <div className="medical-history-panel medical-history-panel--allergies">
+              <button type="button" className="medical-history-panel__header" onClick={() => toggleSection('allergies')}>
+                <span><AlertCircle size={14} className="me-1" /> Allergies <span className="medical-history-count">{selectedAllergies.length}</span></span>
+                <ChevronDown size={16} className={openSections.allergies ? 'rotate-180' : ''} />
+              </button>
+              {openSections.allergies && <div className="medical-history-panel__body">
+                <select multiple className="form-select form-select-sm" value={selectedAllergies} onChange={(e) => handleMultiSelect(e, setSelectedAllergies)} style={{ height: '100px' }}>
+                  {Array.isArray(allergies) && allergies.map(a => <option key={a.id} value={a.id}>{a.name} ({a.severity})</option>)}
+                </select>
+                <button type="button" className="btn btn-link btn-sm px-0" onClick={() => setAddingItem(addingItem === 'allergy' ? null : 'allergy')}><Plus size={13} /> Add allergy</button>
+                {addingItem === 'allergy' && <div className="input-group input-group-sm mb-1">
+                  <input className="form-control" value={newItemName} onChange={(e) => setNewItemName(e.target.value)} placeholder="Allergy name" />
+                  <button type="button" className="btn btn-primary" onClick={() => addReferenceItem('allergy')}>Add</button>
+                </div>}
+                <input type="text" className="form-control form-control-sm mt-1" placeholder="Allergy notes..." value={formData.allergy_notes} onChange={(e) => setFormData({ ...formData, allergy_notes: e.target.value })} />
+              </div>}
+            </div>
           </div>
           <div className="col-md-6">
-            <label className="form-label small fw-semibold text-muted text-uppercase"><Pill size={14} className="me-1" /> Current Medications</label>
-            <select
-              multiple
-              className="form-select form-select-sm"
-              value={selectedMedications}
-              onChange={(e) => handleMultiSelect(e, setSelectedMedications)}
-              style={{ height: '100px' }}
-            >
-              {Array.isArray(medications) && medications.map(m => (
-                <option key={m.id} value={m.id}>{m.name}</option>
-              ))}
-            </select>
-            <input
-              type="text"
-              className="form-control form-control-sm mt-1"
-              placeholder="Dosage, frequency..."
-              value={formData.current_medication_notes}
-              onChange={(e) => setFormData({ ...formData, current_medication_notes: e.target.value })}
-            />
+            <div className="medical-history-panel medical-history-panel--medications">
+              <button type="button" className="medical-history-panel__header" onClick={() => toggleSection('medications')}>
+                <span><Pill size={14} className="me-1" /> Current Medications <span className="medical-history-count">{selectedMedications.length}</span></span>
+                <ChevronDown size={16} className={openSections.medications ? 'rotate-180' : ''} />
+              </button>
+              {openSections.medications && <div className="medical-history-panel__body">
+                <select multiple className="form-select form-select-sm" value={selectedMedications} onChange={(e) => handleMultiSelect(e, setSelectedMedications)} style={{ height: '100px' }}>
+                  {Array.isArray(medications) && medications.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                </select>
+                <button type="button" className="btn btn-link btn-sm px-0" onClick={() => setAddingItem(addingItem === 'medication' ? null : 'medication')}><Plus size={13} /> Add medication</button>
+                {addingItem === 'medication' && <div className="input-group input-group-sm mb-1">
+                  <input className="form-control" value={newItemName} onChange={(e) => setNewItemName(e.target.value)} placeholder="Medication name" />
+                  <button type="button" className="btn btn-primary" onClick={() => addReferenceItem('medication')}>Add</button>
+                </div>}
+                <input type="text" className="form-control form-control-sm mt-1" placeholder="Dosage, frequency..." value={formData.current_medication_notes} onChange={(e) => setFormData({ ...formData, current_medication_notes: e.target.value })} />
+              </div>}
+            </div>
           </div>
           <div className="col-md-6">
-            <label className="form-label small fw-semibold text-muted text-uppercase"><Heart size={14} className="me-1" /> Comorbidities</label>
-            <div className="d-flex flex-wrap gap-2">
+            <div className="medical-history-panel medical-history-panel--comorbidities">
+              <button type="button" className="medical-history-panel__header" onClick={() => toggleSection('comorbidities')}>
+                <span><Heart size={14} className="me-1" /> Comorbidities <span className="medical-history-count">{['has_diabetes', 'has_kidney_disease', 'has_heart_disease', 'has_stroke_history'].filter(key => formData[key]).length}</span></span>
+                <ChevronDown size={16} className={openSections.comorbidities ? 'rotate-180' : ''} />
+              </button>
+              {openSections.comorbidities && <div className="medical-history-panel__body">
+                <div className="d-flex flex-wrap gap-2">
               {['has_diabetes', 'has_kidney_disease', 'has_heart_disease', 'has_stroke_history'].map(key => (
-                <div key={key} className="form-check form-check-inline">
+                <label key={key} className={`comorbidity-toggle ${formData[key] ? 'is-active' : ''}`}>
                   <input
                     className="form-check-input"
                     type="checkbox"
                     checked={formData[key]}
                     onChange={(e) => setFormData({ ...formData, [key]: e.target.checked })}
                   />
-                  <label className="form-check-label small">{key.replace('has_', '').replace('_', ' ').toUpperCase()}</label>
-                </div>
+                  <span>{key.replace('has_', '').replace('_', ' ').toUpperCase()}</span>
+                </label>
               ))}
-            </div>
-            <input
-              type="text"
-              className="form-control form-control-sm mt-1"
-              placeholder="Comorbidity notes..."
+                </div>
+            <textarea
+              rows="2"
+              className="form-control form-control-sm mt-2"
+              placeholder="Other comorbidities or notes..."
               value={formData.comorbidity_notes}
               onChange={(e) => setFormData({ ...formData, comorbidity_notes: e.target.value })}
             />
+              </div>}
+            </div>
           </div>
           <div className="col-md-6">
             <label className="form-label small fw-semibold text-muted text-uppercase"><Phone size={14} className="me-1" /> Emergency Contact</label>
