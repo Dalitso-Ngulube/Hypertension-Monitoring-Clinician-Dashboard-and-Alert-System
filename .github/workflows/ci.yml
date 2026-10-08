@@ -15,6 +15,7 @@ on:
 # Environment variables available to all jobs
 env:
   PYTHON_VERSION: '3.12' # Django 6 requires Python 3.12 or later
+  SECRET_KEY: 'ci-only-not-a-production-secret-key' # Required by Django during CI checks
   POSTGRES_DB: 'github_actions'
   POSTGRES_USER: 'postgres'
   POSTGRES_PASSWORD: 'postgres'
