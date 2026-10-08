@@ -28,9 +28,11 @@ const PatientSidebar = ({ collapsed, toggleSidebar }) => {
     <>
       <button
         onClick={toggleSidebar}
-        className={`btn btn-light position-fixed top-0 start-0 m-2 z-3 shadow-sm rounded-circle p-2 border-0 ${
-          collapsed ? '' : 'ms-190'
+        className={`btn btn-light position-fixed top-0 start-0 m-2 z-3 shadow-sm rounded-circle p-2 border-0 sidebar-toggle-btn ${
+          collapsed ? 'sidebar-toggle-btn--collapsed' : 'sidebar-toggle-btn--open'
         }`}
+        aria-label={collapsed ? 'Open sidebar' : 'Close sidebar'}
+        title={collapsed ? 'Open sidebar' : 'Close sidebar'}
       >
         {collapsed ? <Menu size={20} /> : <X size={20} />}
       </button>

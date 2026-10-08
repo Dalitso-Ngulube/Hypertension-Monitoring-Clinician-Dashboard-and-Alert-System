@@ -84,6 +84,31 @@ body {
   color: var(--text-primary);
   line-height: 1.6;
   transition: background 0.3s ease, color 0.3s ease;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.layout-shell {
+  min-height: 100vh;
+  background: var(--bg-body);
+}
+
+.main-content {
+  min-height: 100vh;
+  padding: 1.25rem 1.5rem;
+  background: var(--bg-body);
+}
+
+.sidebar-open {
+  margin-left: 230px;
+}
+
+.sidebar-collapsed {
+  margin-left: 0;
 }
 
 /* Shared light/dark treatment for data tables and search controls. */
@@ -157,16 +182,50 @@ a { text-decoration: none; }
   top: 0;
   left: 0;
   z-index: 1030;
-  transition: width 0.3s ease;
+  transition: transform 0.28s ease, width 0.28s ease, opacity 0.28s ease, border-color 0.28s ease;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   width: 230px;
+  transform: translateX(0);
+  opacity: 1;
 }
 .sidebar.collapsed {
   width: 0 !important;
   padding: 0 !important;
   border: 0 !important;
+  transform: translateX(-110%);
+  opacity: 0;
+}
+.sidebar-toggle-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  color: var(--clinical-700);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+.sidebar-toggle-btn:hover {
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.16);
+  background: rgba(255, 255, 255, 1);
+}
+.sidebar-toggle-btn--collapsed {
+  left: 0.75rem;
+}
+.sidebar-toggle-btn--open {
+  left: 220px;
+}
+
+@media (max-width: 767.98px) {
+  .sidebar-toggle-btn--open {
+    left: min(78vw, 260px);
+  }
 }
 .sidebar .nav-link {
   color: var(--sidebar-muted);
@@ -347,6 +406,11 @@ a { text-decoration: none; }
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   overflow: hidden;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+.card-clinical:hover {
+  box-shadow: var(--shadow-md);
+  border-color: rgba(59, 130, 246, 0.2);
 }
 .card-clinical .card-header {
   background: transparent;
@@ -512,15 +576,79 @@ a { text-decoration: none; }
 .auth-input-group input::placeholder { color: var(--text-muted); }
 
 /* ===== RESPONSIVE ===== */
+@media (max-width: 991.98px) {
+  .main-content {
+    padding: 1rem 1rem 1.25rem;
+  }
+  .sidebar-open {
+    margin-left: 210px;
+  }
+  .sidebar {
+    width: 210px;
+  }
+}
+
 @media (max-width: 767.98px) {
-  .sidebar { width: 200px; }
-  .sidebar.collapsed { width: 0 !important; }
-  .stat-card { flex-direction: column; text-align: center; align-items: center; }
+  .sidebar {
+    width: min(84vw, 280px);
+    box-shadow: 0 16px 32px rgba(15, 23, 42, 0.18);
+    z-index: 1040;
+  }
+  .sidebar.collapsed {
+    width: 0 !important;
+    transform: translateX(-120%);
+  }
+  .sidebar-open {
+    margin-left: 0;
+  }
+  .main-content {
+    padding: 0.875rem 0.75rem 1rem;
+  }
+  .stat-card {
+    flex-direction: column;
+    text-align: center;
+    align-items: center;
+    padding: 0.9rem 0.85rem;
+  }
   .stat-card .stat-icon { margin-bottom: 0.25rem; }
   .vitals-grid { grid-template-columns: repeat(2, 1fr); }
   .auth-card { padding: 1.5rem; margin: 0.5rem; }
   .ms-190 { margin-left: 0; }
   .ms-230 { margin-left: 0; }
+  .dashboard-bg,
+  .patient-details-page {
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+  }
+  .card-clinical .card-header,
+  .card-clinical .card-body {
+    padding-left: 0.85rem;
+    padding-right: 0.85rem;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .main-content {
+    padding: 0.75rem 0.5rem 0.875rem;
+  }
+  .dashboard-eyebrow {
+    letter-spacing: 0.1em;
+  }
+  .dashboard-heading {
+    font-size: 1.05rem;
+  }
+  .sidebar-footer {
+    padding: 0.75rem 0.8rem;
+  }
+  .btn-theme-toggle,
+  .btn-logout {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    font-size: 0.72rem;
+  }
+  .auth-card {
+    padding: 1.25rem 1rem;
+  }
 }
 
 /* ===== FORCED DARK MODE FOR LOGIN PAGE ===== */
