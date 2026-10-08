@@ -1,82 +1,84 @@
-# .github/workflows/ci.yml
-name: Django CI # Workflow name
+name: Django CI
 
-# Controls when the workflow will run
+# When the workflow runs
 on:
-  # Triggers the workflow on push or pull request events for the main branch
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+  workflow_dispatch:          # Allows manual triggering from the Actions tab
 
 # Environment variables available to all jobs
 env:
-  PYTHON_VERSION: '3.12' # Django 6 requires Python 3.12 or later
-  SECRET_KEY: 'ci-only-not-a-production-secret-key' # Required by Django during CI checks
-  POSTGRES_DB: 'github_actions'
-  POSTGRES_USER: 'postgres'
-  POSTGRES_PASSWORD: 'postgres'
-  POSTGRES_PORT: 5432
-  POSTGRES_HOST: localhost
+  PYTHON_VERSION: '3.12'                            # Django 6 requires Python 3.12 or later
+  SECRET_KEY: 'ci-only-not-a-production-secret-key' # Required by Django; NOT a production secret
+  POSTGRES_DB: 'github_actions'                     # Test database name
+  POSTGRES_USER: 'postgres'                         # Test database user
+  POSTGRES_PASSWORD: 'postgres'                     # Test database password
+  POSTGRES_PORT: 5432                               # Default PostgreSQL port
+  POSTGRES_HOST: localhost                          # Host of the postgres service
 
-# A workflow run is made up of one or more jobs
 jobs:
-  # This workflow contains a single job called "build-and-test"
+  # Single job that installs dependencies, runs checks, tests, and lint
   build-and-test:
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
-    # Service containers to run alongside the runner job
+    # Service containers started alongside the runner
     services:
       postgres:
-        image: postgres:15 # Use a specific version of PostgreSQL
+        image: postgres:15                            # Use a specific version
         env:
           POSTGRES_DB: ${{ env.POSTGRES_DB }}
           POSTGRES_USER: ${{ env.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
         ports:
-          - 5432:5432
-        # Set health checks to wait until postgres has started
+          - 5432:5432                                 # Expose port 5432 to the runner
+        # Health checks so later steps wait until postgres is ready
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Step 1: Checks out your repository under $GITHUB_WORKSPACE
+      # Step 1: Check out the repository into $GITHUB_WORKSPACE
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Step 2: Set up Python environment
+      # Step 2: Set up Python 3.12 and cache pip packages
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.12'
-          cache: 'pip' # Caches pip packages to speed up future runs
+          cache: 'pip'
 
-      # Step 3: Install Python dependencies
+      # Step 3: Install Python dependencies from requirements.txt
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
       # Step 4: Run Django's system checks
+      # SECRET_KEY and DEBUG are set on the step because the top-level env
+      # is not always inherited by run steps in some GitHub Actions setups.
       - name: Run Django system checks
+        env:
+          SECRET_KEY: 'ci-only-not-a-production-secret-key'
+          DEBUG: 'True'
         run: python manage.py check
 
-      # Step 5: Run Django tests with coverage
+      # Step 5: Run tests with coverage
+      # Fails the build if coverage drops below 80%.
       - name: Run tests
+        env:
+          SECRET_KEY: 'ci-only-not-a-production-secret-key'
+          DEBUG: 'True'
         run: |
           pip install coverage
           coverage run manage.py test
-          coverage report --fail-under=80 # Fails if coverage is below 80%
+          coverage report --fail-under=80
 
-      # (Optional) Step 6: Run linting to enforce code style
+      # Step 6: Run flake8 linting on fatal and syntax errors only
       - name: Run linter
         run: |
           pip install flake8
