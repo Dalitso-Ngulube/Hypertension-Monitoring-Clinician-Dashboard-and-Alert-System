@@ -25,3 +25,6 @@ logs/
 *.log.coverage
 .locust.env
 evaluation_artifacts/*.html
+.coverage
+htmlcov/
+.pytest_cache/
