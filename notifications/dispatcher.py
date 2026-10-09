@@ -1,21 +1,20 @@
 from django.core.mail import send_mail
 
-from alerts.services import send_crisis_sms
-
-from .models import Notification
+from .models import NotificationLog
+from .services import Notifier
 
 
 class NotificationDispatcher:
     @staticmethod
     def dispatch(alert):
         # Create an in-app notification record
-        Notification.objects.create(
-            user=alert.patient.user,
+        NotificationLog.objects.create(
+            recipient=alert.patient.user,
+            channel='push',
             message=alert.message,
-            alert=alert,
-            severity=alert.severity
+            status='pending',
         )
-        
+
         # Send an email for critical alerts
         if alert.severity == 'CRITICAL':
             send_mail(
@@ -24,7 +23,11 @@ class NotificationDispatcher:
                 from_email="alerts@yourhealthapp.com",
                 recipient_list=[alert.patient.user.email],
             )
-            
+
             # Send an SMS if the patient has a phone number
             if alert.patient.phone_number:
-                send_crisis_sms(alert.patient.phone_number, alert.patient.first_name)
+                Notifier.send_sms(
+                    alert.patient.phone_number,
+                    f'Critical alert for {alert.patient.first_name}: '
+                    f'{alert.message}',
+                )

@@ -1,3 +1,4 @@
+from alerts.models import Alert
 from notifications.services import Notifier
 
 def process_alert(alert_id):
@@ -8,4 +9,8 @@ def process_alert(alert_id):
     # Send email to clinician
     clinician_email = alert.patient.user.email  # or fetch assigned clinician
     if clinician_email:
-        Notifier.send_email(clinician_email, f'Alert: {alert.alert_type}', alert.message
+        Notifier.send_email(
+            clinician_email,
+            f'Alert: {alert.alert_type}',
+            alert.message,
+        )
