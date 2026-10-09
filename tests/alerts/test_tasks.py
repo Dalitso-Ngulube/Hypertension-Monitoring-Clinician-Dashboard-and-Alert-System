@@ -30,7 +30,7 @@ def test_process_crisis_alert_sends_sms_and_patient_email(send_sms, send_email):
     assert send_sms.call_args_list[-1].args == (
         patient.phone_number, alert.message
     )
-    assert send_email.call_count == 3
+    assert send_email.call_count == 1
     assert send_email.call_args_list[-1].args == (
         'patient@example.com', f'Alert: {alert.alert_type}', alert.message
     )

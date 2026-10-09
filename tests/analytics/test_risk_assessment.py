@@ -133,16 +133,35 @@ class TestWHORiskScore:
         assert 'Current Smoker' in profile['additional_risk_factors']
         assert 'Smoking Cessation' in profile['modifiable_risk_factors']
         assert 'Weight Management (target BMI <25)' in profile['modifiable_risk_factors']
-        assert any('Weight loss' in item for item in profile['recommendations'])
+        assert any(
+            'Monitor blood pressure' in item
+            for item in profile['recommendations']
+        )
 
 
 @pytest.mark.parametrize('category,expected', [
-    ('Very High', '[URGENT]'),
-    ('High', '[MEDICATION]'),
-    ('Moderate', '[FOLLOW-UP]'),
-    ('Low-Moderate', '[LIFESTYLE]'),
-    ('Low', '[FOLLOW-UP]'),
+    ('Very High', 'Monitor blood pressure'),
+    ('High', 'Discuss new or concerning symptoms'),
+    ('Moderate', 'Continue lifestyle changes'),
+    ('Low-Moderate', 'Monitor blood pressure'),
+    ('Low', 'Continue lifestyle changes'),
 ])
 def test_recommendations_cover_each_risk_category(category, expected):
     recs = get_risk_recommendations(category, [], [], {'category': 'Normal'})
-    assert any(item.startswith(expected) for item in recs)
+    assert any(expected in item for item in recs)
+
+
+def test_risk_recommendations_are_non_prescriptive():
+    recs = get_risk_recommendations(
+        'Very High',
+        ['Current Smoker', 'Chronic Kidney Disease'],
+        ['Smoking Cessation'],
+        {'category': 'Obese'},
+    )
+    forbidden_terms = ('statin', 'aspirin', 'prescribe', 'initiate')
+
+    assert recs
+    assert all(
+        not any(term in recommendation.lower() for term in forbidden_terms)
+        for recommendation in recs
+    )

@@ -3,6 +3,7 @@ from django.urls import reverse
 from rest_framework.test import APIClient
 
 from patients.models import Allergy, MedicalCondition, Medication, Patient
+from core.models import AuditLog
 from tests.factories import (
     AdminFactory,
     ClinicianFactory,
@@ -38,6 +39,25 @@ class TestPatientListCreateView:
 
         assert response.status_code == 200
         assert response.data['count'] == 2
+
+    def test_auditlog_written_on_patient_create(self):
+        clinician = ClinicianFactory()
+        client = APIClient()
+        client.force_authenticate(user=clinician)
+
+        response = client.post(reverse('patient-list-create'), {
+            'first_name': 'Audit',
+            'last_name': 'Patient',
+            'age': 40,
+        })
+
+        assert response.status_code == 201
+        log = AuditLog.objects.get(
+            action='CREATE',
+            resource_type='patients.Patient',
+            resource_id=response.data['id'],
+        )
+        assert log.user == clinician
 
     def test_clinician_creates_patient_assigned_to_self(self):
         clinician = ClinicianFactory()

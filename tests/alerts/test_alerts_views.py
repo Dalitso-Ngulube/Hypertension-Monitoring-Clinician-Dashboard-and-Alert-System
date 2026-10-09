@@ -2,6 +2,7 @@ import pytest
 from django.urls import reverse
 from rest_framework.test import APIClient
 
+from core.models import AuditLog
 from tests.factories import AlertFactory, ClinicianFactory, PatientFactory
 
 pytestmark = pytest.mark.django_db
@@ -62,3 +63,10 @@ class TestUnresolvedAlertsView:
         response = client.patch(url, {'is_resolved': True})
         assert response.status_code == 200
         assert response.data['is_resolved'] is True
+        audit = AuditLog.objects.get(
+            action='UPDATE',
+            resource_type='alerts.Alert',
+            resource_id=alert.id,
+        )
+        assert audit.user == clinician
+        assert audit.details['event'] == 'alert_resolved'

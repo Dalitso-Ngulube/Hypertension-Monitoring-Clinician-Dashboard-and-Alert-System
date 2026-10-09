@@ -8,8 +8,8 @@ from tests.factories import ClinicianFactory, PatientFactory, UserFactory
 pytestmark = pytest.mark.django_db
 
 
-@patch('alerts.signals.Notifier.send_sms')
-@patch('alerts.signals.Notifier.send_email')
+@patch('notifications.dispatcher.Notifier.send_sms')
+@patch('notifications.dispatcher.send_mail')
 def test_critical_alert_notifies_clinician_and_patient(
     send_email, send_sms
 ):
@@ -29,15 +29,15 @@ def test_critical_alert_notifies_clinician_and_patient(
     )
 
     assert send_email.call_count == 2
-    assert send_email.call_args_list[0].args[0] == 'clinician@example.com'
-    assert send_email.call_args_list[1].args[0] == 'patient@example.com'
+    assert send_email.call_args_list[0].args[3] == ['clinician@example.com']
+    assert send_email.call_args_list[1].args[3] == ['patient@example.com']
     assert send_sms.call_count == 1
     assert send_sms.call_args.args[0] == patient.phone_number
-    assert str(alert.created_at) in send_email.call_args_list[0].args[2]
+    assert send_email.call_args_list[0].args[1] == alert.message
 
 
-@patch('alerts.signals.Notifier.send_sms', side_effect=RuntimeError('sms down'))
-@patch('alerts.signals.Notifier.send_email', side_effect=RuntimeError('email down'))
+@patch('notifications.dispatcher.Notifier.send_sms', side_effect=RuntimeError('sms down'))
+@patch('notifications.dispatcher.send_mail', side_effect=RuntimeError('email down'))
 def test_notification_failures_do_not_abort_alert_creation(
     send_email, send_sms
 ):
@@ -59,8 +59,8 @@ def test_notification_failures_do_not_abort_alert_creation(
 def test_low_severity_alert_does_not_send_notifications():
     patient = PatientFactory(phone_number='+15555550123')
 
-    with patch('alerts.signals.Notifier.send_sms') as send_sms:
-        with patch('alerts.signals.Notifier.send_email') as send_email:
+    with patch('notifications.dispatcher.Notifier.send_sms') as send_sms:
+        with patch('notifications.dispatcher.send_mail') as send_email:
             Alert.objects.create(
                 patient=patient,
                 alert_type='INFO',
@@ -72,8 +72,8 @@ def test_low_severity_alert_does_not_send_notifications():
     send_email.assert_not_called()
 
 
-@patch('alerts.signals.Notifier.send_sms')
-@patch('alerts.signals.Notifier.send_email')
+@patch('notifications.dispatcher.Notifier.send_sms')
+@patch('notifications.dispatcher.send_mail')
 def test_alert_update_does_not_resend_notifications(send_email, send_sms):
     alert = Alert.objects.create(
         patient=PatientFactory(),

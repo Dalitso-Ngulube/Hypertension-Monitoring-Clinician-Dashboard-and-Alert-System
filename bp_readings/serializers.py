@@ -20,14 +20,36 @@ class BPReadingSerializer(serializers.ModelSerializer):
             'patient': {'required': True},
         }
 
+    def get_fields(self):
+        fields = super().get_fields()
+        if self.instance is not None:
+            fields['patient'].read_only = True
+        return fields
+
     def validate(self, data):
+        if self.instance and 'patient' in data:
+            if data['patient'] != self.instance.patient:
+                raise serializers.ValidationError({
+                    'patient': 'Patient cannot be changed after creation.'
+                })
+
+        # Read-only fields are normally omitted from validated_data by DRF.
+        # Inspect raw input as well, so reassignment attempts return 400 rather
+        # than silently succeeding with the original patient unchanged.
+        requested_patient = self.initial_data.get('patient')
+        if self.instance and requested_patient is not None:
+            if str(requested_patient) != str(self.instance.patient_id):
+                raise serializers.ValidationError({
+                    'patient': 'Patient cannot be changed after creation.'
+                })
+
         systolic = data.get('systolic')
         diastolic = data.get('diastolic')
-        if diastolic > systolic:
+        if systolic is not None and diastolic is not None and diastolic > systolic:
             raise serializers.ValidationError("Diastolic cannot exceed systolic.")
-        if systolic < 50 or systolic > 250:
+        if systolic is not None and (systolic < 50 or systolic > 250):
             raise serializers.ValidationError("Systolic must be between 50 and 250.")
-        if diastolic < 30 or diastolic > 200:
+        if diastolic is not None and (diastolic < 30 or diastolic > 200):
             raise serializers.ValidationError("Diastolic must be between 30 and 200.")
         return data
 

@@ -1,4 +1,6 @@
 from datetime import timedelta
+from unittest.mock import patch
+
 import pytest
 from django.utils import timezone
 
@@ -33,6 +35,41 @@ def test_three_elevated_readings_create_trend_alert():
 
     assert AlertEngine.check_trend(patient) is True
     assert Alert.objects.filter(patient=patient, alert_type='TRENDING_UP').exists()
+
+
+def test_trend_alert_does_not_fire_twice_within_window():
+    patient = PatientFactory()
+    for pressure in [145, 140, 135]:
+        BPReadingFactory(patient=patient, systolic=pressure, diastolic=95)
+
+    AlertEngine.check_trend(patient)
+    AlertEngine.check_trend(patient)
+
+    assert Alert.objects.filter(
+        patient=patient,
+        alert_type='TRENDING_UP',
+        is_resolved=False,
+    ).count() == 1
+
+
+def test_trend_alert_fires_again_after_window():
+    patient = PatientFactory()
+    for pressure in [145, 140, 135]:
+        BPReadingFactory(patient=patient, systolic=pressure, diastolic=95)
+
+    first_now = timezone.now()
+    with patch('alerts.services.timezone.now', return_value=first_now):
+        AlertEngine.check_trend(patient)
+
+    with patch(
+        'alerts.services.timezone.now',
+        return_value=first_now + timedelta(days=8),
+    ):
+        AlertEngine.check_trend(patient)
+
+    assert Alert.objects.filter(
+        patient=patient, alert_type='TRENDING_UP'
+    ).count() == 2
 
 
 def test_trend_with_normal_reading_does_not_alert():
