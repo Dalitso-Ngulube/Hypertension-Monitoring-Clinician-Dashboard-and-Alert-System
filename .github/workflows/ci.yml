@@ -80,7 +80,7 @@ jobs:
           DB_PORT: ${{ env.POSTGRES_PORT }}
         run: |
           pip install coverage
-          coverage run manage.py test
+          coverage run --source=accounts,alerts,analytics,appointments,bp_readings,core,hypertension_monitoring_and_alert_system,notifications,patients,reports -m pytest
           coverage report --fail-under=80
 
       - name: Run linter

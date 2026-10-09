@@ -43,3 +43,47 @@ class TestNotifier(TestCase):
             from_=settings.TWILIO_PHONE_NUMBER,
             to='+123456789'
         )
+
+    @patch('notifications.services.settings.DEBUG', True)
+    @patch('notifications.services.send_mail')
+    def test_debug_email_is_logged_instead_of_sent(self, mock_send_mail):
+        with patch('notifications.services.logger.info') as mock_log:
+            Notifier.send_email('test@example.com', 'Subject', 'Message')
+
+        mock_log.assert_called_once()
+        mock_send_mail.assert_not_called()
+
+    @patch('notifications.services.settings.DEBUG', True)
+    @patch('notifications.services.Client')
+    def test_debug_sms_is_logged_instead_of_sent(self, mock_client):
+        with patch('notifications.services.logger.info') as mock_log:
+            Notifier.send_sms('+123456789', 'Hello')
+
+        mock_log.assert_called_once()
+        mock_client.assert_not_called()
+
+    @patch('notifications.services.settings.DEBUG', False)
+    @patch('notifications.services.send_mail', side_effect=Exception('SMTP error'))
+    @patch('notifications.services.logger.error')
+    def test_email_failure_is_logged(self, mock_log, mock_send_mail):
+        Notifier.send_email('test@example.com', 'Subject', 'Message')
+
+        mock_send_mail.assert_called_once()
+        mock_log.assert_called_once()
+
+    @patch('notifications.services.settings.DEBUG', False)
+    @patch('notifications.services.Client', side_effect=Exception('Twilio error'))
+    @patch('notifications.services.logger.error')
+    def test_sms_failure_is_logged(self, mock_log, mock_client):
+        Notifier.send_sms('+123456789', 'Hello')
+
+        mock_client.assert_called_once()
+        mock_log.assert_called_once()
+
+    def test_empty_email_is_ignored(self):
+        with patch('notifications.services.logger.info') as mock_log:
+            with patch('notifications.services.send_mail') as mock_send_mail:
+                Notifier.send_email('', 'Subject', 'Message')
+
+        mock_log.assert_not_called()
+        mock_send_mail.assert_not_called()
