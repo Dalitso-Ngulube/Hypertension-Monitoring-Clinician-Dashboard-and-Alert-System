@@ -1,3 +1,5 @@
+"""Non-validated demonstration risk scoring; not for clinical use."""
+
 import math
 
 from patients.models import PatientMedicalHistory
@@ -223,67 +225,10 @@ def get_risk_profile(patient):
 
 
 def get_risk_recommendations(category, additional_risks, modifiable, bmi_info):
-    """Generate evidence-based recommendations based on WHO/ISH guidelines."""
-    recs = []
-    
-    if category == 'Very High':
-        recs.append('[URGENT] Immediate specialist referral recommended.')
-        recs.append('[MEDICATION] Initiate statin therapy (high-intensity).')
-        recs.append('[MEDICATION] Initiate or optimize antihypertensive therapy to achieve BP <140/90 (or <130/80 if diabetic/CKD).')
-        recs.append('[MEDICATION] Consider aspirin therapy (if no contraindications).')
-        recs.append('[MONITOR] Monitor BP and lipids every 3 months.')
-
-    elif category == 'High':
-        recs.append('[MEDICATION] Initiate statin therapy (moderate-intensity).')
-        recs.append('[MEDICATION] Optimize antihypertensive therapy.')
-        recs.append('[MONITOR] Monitor BP every 3-6 months.')
-        recs.append('[FOLLOW-UP] Reassess risk in 6-12 months.')
-
-    elif category == 'Moderate':
-        recs.append('[MEDICATION] Consider statin therapy (low-to-moderate intensity).')
-        recs.append('[MONITOR] Monitor BP regularly.')
-        recs.append('[FOLLOW-UP] Reassess risk in 1 year.')
-        recs.append('[LIFESTYLE] Continue lifestyle modifications.')
-
-    elif category == 'Low-Moderate':
-        recs.append('[LIFESTYLE] Lifestyle modifications recommended.')
-        recs.append('[MONITOR] Monitor BP annually.')
-        recs.append('[FOLLOW-UP] Reassess risk in 2 years.')
-
-    else:  # Low
-        recs.append('[LIFESTYLE] Continue healthy lifestyle measures.')
-        recs.append('[FOLLOW-UP] Reassess in 2-3 years.')
-
-    # BMI-specific recommendations
-    if bmi_info and bmi_info['category'] == 'Obese':
-        recs.append('[WEIGHT] Weight loss: aim for 5-10% weight loss over 6 months.')
-        recs.append('[REFERRAL] Consider referral to dietitian for nutritional counseling.')
-    elif bmi_info and bmi_info['category'] == 'Overweight':
-        recs.append('[WEIGHT] Weight management: aim for 5% weight loss over 6 months.')
-        recs.append('[DIET] Review dietary habits and physical activity.')
-
-    # Additional recommendations based on specific risk factors
-    if 'Current Smoker' in additional_risks:
-        recs.append('[SMOKING] Strongly advise smoking cessation. Consider nicotine replacement therapy.')
-    if 'Chronic Kidney Disease' in additional_risks:
-        recs.append('[RENAL] Monitor renal function and consider ACE inhibitor or ARB.')
-    if 'Family History of Heart Disease' in additional_risks:
-        recs.append('[FAMILY] Family history indicates higher risk – emphasize lifestyle measures.')
-    if 'Excessive Alcohol Consumption' in additional_risks:
-        recs.append('[ALCOHOL] Reduce alcohol intake to <=1 drink/day (women) or <=2 drinks/day (men).')
-    if 'Sedentary Lifestyle' in additional_risks:
-        recs.append('[EXERCISE] Aim for at least 150 minutes of moderate-intensity exercise per week.')
-
-    # Add modifiable factors
-    for item in modifiable:
-        recs.append(f'[MODIFY] {item}')
-
-    # Remove duplicates while preserving order
-    seen = set()
-    unique_recs = []
-    for rec in recs:
-        if rec not in seen:
-            seen.add(rec)
-            unique_recs.append(rec)
-
-    return unique_recs
+    """Return non-prescriptive monitoring guidance for a demo risk category."""
+    recommendations = [
+        'Monitor blood pressure regularly and record readings.',
+        'Discuss new or concerning symptoms with a qualified clinician.',
+        'Continue lifestyle changes appropriate to individual circumstances.',
+    ]
+    return recommendations
