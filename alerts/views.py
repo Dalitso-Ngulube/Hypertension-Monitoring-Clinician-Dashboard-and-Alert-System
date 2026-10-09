@@ -2,6 +2,7 @@ from rest_framework import generics, permissions
 from rest_framework.exceptions import PermissionDenied
 
 from accounts.permissions import IsClinicianOrAdmin, IsOwnerOrClinician
+from core.audit import log_action
 
 from .models import Alert
 from .serializers import AlertSerializer
@@ -57,6 +58,17 @@ class AlertUpdateView(generics.UpdateAPIView):
     serializer_class = AlertSerializer
     permission_classes = [permissions.IsAuthenticated, IsClinicianOrAdmin]
     http_method_names = ['patch']
+
+    def perform_update(self, serializer):
+        alert = serializer.save()
+        if alert.is_resolved:
+            log_action(
+                self.request.user,
+                'UPDATE',
+                alert,
+                metadata={'event': 'alert_resolved'},
+                request=self.request,
+            )
 
     def get_queryset(self):
         user = self.request.user

@@ -9,6 +9,7 @@ from django.urls import reverse_lazy
 from rest_framework import generics, permissions
 
 from accounts.permissions import IsClinicianOrAdmin
+from core.audit import log_action
 
 from .serializers import ClinicianCreateSerializer, RegisterSerializer, UserSerializer
 
@@ -32,7 +33,13 @@ class ClinicianCreateView(generics.CreateAPIView):
         role = self.request.data.get('role', 'clinician')
         if role not in ['clinician', 'admin']:
             role = 'clinician'
-        serializer.save(role=role)
+        clinician = serializer.save(role=role)
+        log_action(
+            self.request.user,
+            'CREATE',
+            clinician,
+            request=self.request,
+        )
 
 class UserListView(generics.ListAPIView):
     serializer_class = UserSerializer

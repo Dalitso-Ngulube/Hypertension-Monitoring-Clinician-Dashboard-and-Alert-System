@@ -3,7 +3,9 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.pagination import PageNumberPagination
 from django.utils import timezone
 from datetime import timedelta
+from django.db import transaction
 from accounts.permissions import IsOwnerOrClinician
+from core.audit import log_action
 from patients.models import Patient
 from .models import BPReading
 from .serializers import BPReadingSerializer, PatientAddReadingSerializer
@@ -51,13 +53,34 @@ class BPReadingListCreateView(generics.ListCreateAPIView):
             if patient.user != user:
                 raise PermissionDenied("You can only add readings for yourself.")
 
-        serializer.save()
+        with transaction.atomic():
+            reading = serializer.save()
+            log_action(user, 'CREATE', reading, request=self.request)
 
 
 class BPReadingDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = BPReading.objects.all()
     serializer_class = BPReadingSerializer
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrClinician]
+
+    def perform_update(self, serializer):
+        with transaction.atomic():
+            reading = serializer.save()
+            log_action(
+                self.request.user,
+                'UPDATE',
+                reading,
+                request=self.request,
+            )
+
+    def perform_destroy(self, instance):
+        log_action(
+            self.request.user,
+            'DELETE',
+            instance,
+            request=self.request,
+        )
+        instance.delete()
 
 
 class PatientAddReadingView(generics.CreateAPIView):
@@ -85,4 +108,6 @@ class PatientAddReadingView(generics.CreateAPIView):
                 'address': '',
             }
         )
-        serializer.save(patient=patient)
+        with transaction.atomic():
+            reading = serializer.save(patient=patient)
+            log_action(user, 'CREATE', reading, request=self.request)
