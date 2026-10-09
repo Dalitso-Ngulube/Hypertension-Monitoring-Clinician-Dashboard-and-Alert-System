@@ -273,6 +273,7 @@ if not DEBUG:
 # DRF + JWT + Rate Limiting
 # ============================================
 REST_FRAMEWORK = {
+    'EXCEPTION_HANDLER': 'core.security.exceptions.security_exception_handler',
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',

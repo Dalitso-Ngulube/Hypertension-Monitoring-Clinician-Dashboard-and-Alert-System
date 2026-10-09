@@ -81,6 +81,36 @@ Please investigate immediately.
         else:
             logger.warning(f'Failed login attempt: username={username}, ip={ip}')
 
+    @staticmethod
+    def log_failed_login(username, ip=None, reason='Invalid credentials'):
+        """Record a failed authentication attempt without logging credentials."""
+        logger.warning(
+            '[SECURITY] Failed login: username=%s ip=%s reason=%s',
+            username,
+            ip or 'unknown',
+            reason,
+        )
+
+    @staticmethod
+    def log_unauthorized(request, reason='Authentication or permission denied'):
+        """Record an API authentication/authorization refusal."""
+        user = getattr(request, 'user', None)
+        username = getattr(user, 'get_username', lambda: 'anonymous')()
+        meta = getattr(request, 'META', {})
+        forwarded_for = meta.get('HTTP_X_FORWARDED_FOR')
+        ip = forwarded_for.split(',')[0].strip() if forwarded_for else meta.get(
+            'REMOTE_ADDR', 'unknown'
+        )
+        logger.warning(
+            '[SECURITY] Unauthorized request: username=%s method=%s path=%s '
+            'ip=%s reason=%s',
+            username or 'anonymous',
+            getattr(request, 'method', 'unknown'),
+            getattr(request, 'path', 'unknown'),
+            ip,
+            reason,
+        )
+
 
     @staticmethod
     def log_api_access(user, method, path, status_code, request=None):
