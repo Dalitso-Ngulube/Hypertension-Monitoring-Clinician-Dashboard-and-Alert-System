@@ -18,17 +18,6 @@ class WHORiskScore:
         age = patient.age
         gender = patient.gender
         
-        # Get latest BP
-        latest_reading = patient.bp_readings.order_by('-recorded_at').first()
-        if not latest_reading:
-            return None, None, 'Insufficient Data'
-        
-        sys_bp = latest_reading.systolic
-        
-        # Risk factors
-        smoker = history.smoking_status == 'CURRENT' if history else False
-        diabetic = history.has_diabetes if history else False
-
         bmi = None
         bmi_source = None
 
@@ -48,7 +37,6 @@ class WHORiskScore:
             bmi = 24.0
             bmi_source = 'default'
 
-        # BMI categories (WHO classification)
         if bmi < 18.5:
             bmi_category = 'Underweight'
             bmi_coef = 0.0
@@ -61,6 +49,23 @@ class WHORiskScore:
         else:
             bmi_category = 'Obese'
             bmi_coef = 0.6
+
+        bmi_info = {
+            'value': bmi,
+            'category': bmi_category,
+            'source': bmi_source,
+        }
+
+        # Get latest BP
+        latest_reading = patient.bp_readings.order_by('-recorded_at').first()
+        if not latest_reading:
+            return None, None, 'info', bmi_info
+
+        sys_bp = latest_reading.systolic
+
+        # Risk factors
+        smoker = history.smoking_status == 'CURRENT' if history else False
+        diabetic = history.has_diabetes if history else False
 
         # ============================================================
         # WHO risk coefficients
@@ -146,12 +151,6 @@ class WHORiskScore:
         else:
             category = 'Very High'
             color = 'danger'
-
-        bmi_info = {
-            'value': bmi,
-            'category': bmi_category,
-            'source': bmi_source,
-        }
 
         return risk_percentage, category, color, bmi_info
 
