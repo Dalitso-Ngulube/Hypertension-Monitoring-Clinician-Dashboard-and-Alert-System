@@ -16,11 +16,17 @@ on:
 env:
   PYTHON_VERSION: '3.12' # Django 6 requires Python 3.12 or later
   SECRET_KEY: 'ci-only-not-a-production-secret-key' # Required by Django during CI checks
+  DEBUG: 'True'
   POSTGRES_DB: 'github_actions'
   POSTGRES_USER: 'postgres'
   POSTGRES_PASSWORD: 'postgres'
   POSTGRES_PORT: 5432
   POSTGRES_HOST: localhost
+  DB_NAME: 'github_actions'
+  DB_USER: 'postgres'
+  DB_PASSWORD: 'postgres'
+  DB_PORT: 5432
+  DB_HOST: localhost
 
 # A workflow run is made up of one or more jobs
 jobs:
@@ -34,9 +40,9 @@ jobs:
       postgres:
         image: postgres:15 # Use a specific version of PostgreSQL
         env:
-          POSTGRES_DB: ${{ env.POSTGRES_DB }}
-          POSTGRES_USER: ${{ env.POSTGRES_USER }}
-          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          POSTGRES_DB: github_actions
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
         ports:
           - 5432:5432
         # Set health checks to wait until postgres has started
