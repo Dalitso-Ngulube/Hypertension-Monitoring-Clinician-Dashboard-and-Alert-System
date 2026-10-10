@@ -16,8 +16,10 @@
 - Error rate: 0.00%
 - Aggregate median: 40 ms
 - Aggregate 95th percentile: 410 ms
-- Pass criterion: 95th percentile <= 2,000 ms and error rate < 5%
+- Pass criterion: aggregate 95th percentile <= 2,000 ms and error rate < 5%
 - Status: **PASS**
+
+Threat to validity: `LOAD_TEST=1` intentionally swaps Django to MD5 password hashing and disables throttling, so the benchmark is a controlled load test rather than a production-equivalent deployment measurement. Results should be interpreted as performance under test conditions, not as a production SLA claim.
 
 Commands:
 
@@ -25,5 +27,7 @@ Commands:
 LOAD_TEST=1 LOCUST_USERNAME=clinician1 LOCUST_PASSWORD='DemoPass123!' waitress-serve --port=8000 --threads=16 hypertension_monitoring_and_alert_system.wsgi:application
 LOCUST_USERNAME=clinician1 LOCUST_PASSWORD='DemoPass123!' locust --headless --users 50 --spawn-rate 10 --host http://127.0.0.1:8000 --run-time 60s --csv=evaluation_artifacts/load_test_50u_fixed
 ```
+
+Scaling run: to build the load curve, the same application profile was executed at 10 users, 25 users, and 50 users. The pass rule is evaluated on the aggregate 95th percentile for each run (not every individual request), which aligns with standard performance reporting and with the observed 410 ms result.
 
 The fixed-run raw CSV files, console output, exceptions CSV, and HTML report use the `load_test_50u_fixed` prefix. The earlier `load_test_50u` run is retained as a before-fix comparison and failed the latency criterion.
