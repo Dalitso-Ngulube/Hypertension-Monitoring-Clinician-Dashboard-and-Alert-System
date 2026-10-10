@@ -1,0 +1,8 @@
+Method,Name,Error,Occurrences
+GET,/api/bp_readings/,HTTPError('429 Client Error: Too Many Requests for url: /api/bp_readings/'),144
+GET,/api/bp_readings/,HTTPError('403 Client Error: Forbidden for url: /api/bp_readings/'),437
+GET,/api/alerts/,HTTPError('429 Client Error: Too Many Requests for url: /api/alerts/'),24
+GET,/api/alerts/,HTTPError('403 Client Error: Forbidden for url: /api/alerts/'),161
+GET,/api/patients/,HTTPError('403 Client Error: Forbidden for url: /api/patients/'),295
+POST,/api/auth/login/,HTTPError('429 Client Error: Too Many Requests for url: /api/auth/login/'),35
+GET,/api/patients/,HTTPError('429 Client Error: Too Many Requests for url: /api/patients/'),83
