@@ -18,6 +18,19 @@ def test_reference_classifier_covers_all_thresholds():
     assert evaluation._reference_classify(119, 79) == 'NORMAL'
 
 
+def test_reference_set_has_50_distinct_cases():
+    rows = evaluation._reference_readings()
+    assert len(rows) == 50
+    distinct_pairs = {(row['systolic'], row['diastolic']) for row in rows}
+    assert len(distinct_pairs) == 50
+
+    counts = {category: 0 for category in evaluation.RISK_CATEGORIES}
+    for row in rows:
+        counts[row['expected']] += 1
+
+    assert counts == {category: 10 for category in evaluation.RISK_CATEGORIES}
+
+
 def test_reference_data_accuracy_report(monkeypatch):
     monkeypatch.setattr(evaluation, '_reference_readings', lambda: [
         {'id': '1', 'systolic': 120, 'diastolic': 70, 'expected': 'ELEVATED'},
