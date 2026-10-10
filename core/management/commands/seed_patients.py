@@ -4,6 +4,7 @@ from datetime import timedelta
 
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
+from django.db import transaction
 from django.utils import timezone
 
 from alerts.models import Alert
@@ -65,15 +66,21 @@ STREET_NAMES = [
     'Burma', 'Mutaba', 'Serenje', 'Mpika', 'Kasama'
 ]
 
+PATIENT_EMAIL_DOMAIN = 'patient.zm'
+
+
 class Command(BaseCommand):
-    help = 'Generates simulated patient data with Zambian names and 3-5 BP readings each.'
+    help = (
+        'Generates simulated patient data with Zambian names, email '
+        'addresses, and 3-5 BP readings each.'
+    )
 
     def add_arguments(self, parser):
         parser.add_argument(
             '--count',
             type=int,
-            default=50,
-            help='Number of patients to generate (default: 50)'
+            default=1000,
+            help='Number of patients to generate (default: 1000)'
         )
         parser.add_argument(
             '--clinician',
@@ -98,6 +105,22 @@ class Command(BaseCommand):
             default=30,
             help='Maximum age of readings in days (default: 30)'
         )
+        parser.add_argument(
+            '--seed',
+            type=int,
+            default=None,
+            help='Random seed for reproducible runs (default: non-deterministic)'
+        )
+        parser.add_argument(
+            '--patient-password',
+            type=str,
+            default=None,
+            help=(
+                'If set, patient users are created with this password so they '
+                'can log in. Default: unusable password (fast seeding; users '
+                'cannot log in)'
+            )
+        )
 
     def handle(self, *args, **options):
         count = options['count']
@@ -105,15 +128,22 @@ class Command(BaseCommand):
         clear_existing = options['clear']
         specified_readings = options['readings']
         days = options['days']
+        seed = options['seed']
+        patient_password = options['patient_password']
 
-        # Get password from environment variable or use a sensible default
+        if seed is not None:
+            random.seed(seed)
+            self.stdout.write(f'Using random seed: {seed}')
+
         demo_password = os.getenv('DEMO_PASSWORD', 'Demo@2024!')
 
         if clear_existing:
             self.stdout.write('Clearing existing patients, readings, and alerts...')
-            Patient.objects.all().delete()
-            BPReading.objects.all().delete()
             Alert.objects.all().delete()
+            BPReading.objects.all().delete()
+            PatientMedicalHistory.objects.all().delete()
+            Patient.objects.all().delete()
+            User.objects.filter(role='patient').delete()
             self.stdout.write(self.style.SUCCESS('Cleared.'))
 
         clinician, created = User.objects.get_or_create(
@@ -132,7 +162,6 @@ class Command(BaseCommand):
             ))
         else:
             self.stdout.write(f'Using existing clinician: {clinician_username}')
-            # Optionally update password if you want to enforce the new one
             clinician.set_password(demo_password)
             clinician.save()
 
@@ -141,7 +170,9 @@ class Command(BaseCommand):
         medications = list(Medication.objects.all())
 
         if not conditions:
-            self.stdout.write(self.style.WARNING('No medical conditions found. Run seed_medical_data first.'))
+            self.stdout.write(self.style.WARNING(
+                'No medical conditions found. Run seed_medical_data first.'
+            ))
             return
 
         patients_created = 0
@@ -159,116 +190,164 @@ class Command(BaseCommand):
             height = round(random.uniform(1.50, 1.95), 2)
             weight = round(random.uniform(50, 120), 1)
 
-            patient = Patient.objects.create(
-                clinician=clinician,
-                first_name=first_name,
-                last_name=last_name,
-                age=age,
-                gender=gender,
-                phone_number=phone,
-                address=address,
-                height=height,
-                weight=weight,
-            )
+            # Deterministic, unique username and email per patient
+            username = f"{first_name.lower()}.{last_name.lower()}{i:04d}"
+            email = f"{username}@{PATIENT_EMAIL_DOMAIN}"
 
-            history, _ = PatientMedicalHistory.objects.get_or_create(patient=patient)
+            with transaction.atomic():
+                # Create the User. The post_save signal creates the Patient.
+                user = User(
+                    username=username,
+                    email=email,
+                    role='patient',
+                    first_name=first_name,
+                    last_name=last_name,
+                    phone_number=phone,
+                )
+                if patient_password:
+                    user.set_password(patient_password)
+                else:
+                    user.set_unusable_password()
+                user.save()
 
-            if conditions:
-                selected_conditions = random.sample(conditions, random.randint(1, 3))
+                # Fetch the auto-created Patient and fill in the rest
+                patient = Patient.objects.get(user=user)
+                patient.clinician = clinician
+                patient.first_name = first_name
+                patient.last_name = last_name
+                patient.age = age
+                patient.gender = gender
+                patient.phone_number = phone
+                patient.address = address
+                patient.height = height
+                patient.weight = weight
+                patient.save()
+
+                history, _ = PatientMedicalHistory.objects.get_or_create(
+                    patient=patient
+                )
+
+                selected_conditions = random.sample(
+                    conditions, random.randint(1, 3)
+                )
                 history.conditions.add(*selected_conditions)
 
-            if allergies and random.random() < 0.4:
-                selected_allergies = random.sample(allergies, random.randint(1, 2))
-                history.allergies.add(*selected_allergies)
+                if allergies and random.random() < 0.4:
+                    selected_allergies = random.sample(
+                        allergies, random.randint(1, 2)
+                    )
+                    history.allergies.add(*selected_allergies)
 
-            if medications:
-                selected_meds = random.sample(medications, random.randint(1, 2))
-                history.current_medications.add(*selected_meds)
+                if medications:
+                    selected_meds = random.sample(
+                        medications, random.randint(1, 2)
+                    )
+                    history.current_medications.add(*selected_meds)
 
-            history.has_diabetes = random.random() < 0.2
-            history.has_kidney_disease = random.random() < 0.1
-            history.has_heart_disease = random.random() < 0.15
-            history.has_stroke_history = random.random() < 0.05
+                history.has_diabetes = random.random() < 0.2
+                history.has_kidney_disease = random.random() < 0.1
+                history.has_heart_disease = random.random() < 0.15
+                history.has_stroke_history = random.random() < 0.05
 
-            smoking_options = ['NEVER', 'FORMER', 'CURRENT']
-            history.smoking_status = random.choice(smoking_options)
-            if history.smoking_status == 'CURRENT':
-                history.smoking_pack_years = random.randint(1, 40)
+                smoking_options = ['NEVER', 'FORMER', 'CURRENT']
+                history.smoking_status = random.choice(smoking_options)
+                if history.smoking_status == 'CURRENT':
+                    history.smoking_pack_years = random.randint(1, 40)
 
-            alcohol_options = ['NONE', 'LIGHT', 'MODERATE', 'HEAVY']
-            history.alcohol_consumption = random.choice(alcohol_options)
+                alcohol_options = ['NONE', 'LIGHT', 'MODERATE', 'HEAVY']
+                history.alcohol_consumption = random.choice(alcohol_options)
 
-            activity_options = ['SEDENTARY', 'LIGHT', 'MODERATE', 'ACTIVE']
-            history.physical_activity = random.choice(activity_options)
+                activity_options = ['SEDENTARY', 'LIGHT', 'MODERATE', 'ACTIVE']
+                history.physical_activity = random.choice(activity_options)
 
-            history.diet_description = random.choice([
-                'Balanced diet', 'High salt intake', 'DASH diet', 'Vegetarian',
-                'High processed foods', 'Mediterranean diet', 'Traditional Zambian diet',
-                'High carbohydrate diet', 'Low fat diet'
-            ])
+                history.diet_description = random.choice([
+                    'Balanced diet', 'High salt intake', 'DASH diet',
+                    'Vegetarian', 'High processed foods', 'Mediterranean diet',
+                    'Traditional Zambian diet', 'High carbohydrate diet',
+                    'Low fat diet'
+                ])
 
-            history.family_history_hypertension = random.random() < 0.3
-            history.family_history_diabetes = random.random() < 0.15
-            history.family_history_heart_disease = random.random() < 0.2
-            history.family_history_stroke = random.random() < 0.1
+                history.family_history_hypertension = random.random() < 0.3
+                history.family_history_diabetes = random.random() < 0.15
+                history.family_history_heart_disease = random.random() < 0.2
+                history.family_history_stroke = random.random() < 0.1
 
-            bmi = patient.bmi
-            if bmi is not None:
-                history.bmi = round(bmi, 1)
-            history.save()
+                bmi = patient.bmi
+                if bmi is not None:
+                    history.bmi = round(bmi, 1)
+                history.save()
 
-            if specified_readings:
-                num_readings = specified_readings
-            else:
-                num_readings = random.randint(3, 5)
-
-            for _ in range(num_readings):
-                rand = random.random()
-                if rand < 0.50:
-                    systolic = random.randint(105, 130)
-                    diastolic = random.randint(65, 82)
-                elif rand < 0.75:
-                    systolic = random.randint(125, 150)
-                    diastolic = random.randint(78, 92)
-                elif rand < 0.90:
-                    systolic = random.randint(140, 170)
-                    diastolic = random.randint(90, 108)
+                if specified_readings:
+                    num_readings = specified_readings
                 else:
-                    systolic = random.randint(180, 220)
-                    diastolic = random.randint(110, 135)
+                    num_readings = random.randint(3, 5)
 
-                pulse = random.randint(60, 100)
-                offset = random.randint(0, days)
-                random_time = timezone.now() - timedelta(days=offset)
-                random_time = random_time.replace(
-                    hour=random.randint(6, 20),
-                    minute=random.randint(0, 59),
-                    second=0,
-                    microsecond=0
-                )
+                for _ in range(num_readings):
+                    rand = random.random()
+                    if rand < 0.50:
+                        systolic = random.randint(105, 130)
+                        diastolic = random.randint(65, 82)
+                    elif rand < 0.75:
+                        systolic = random.randint(125, 150)
+                        diastolic = random.randint(78, 92)
+                    elif rand < 0.90:
+                        systolic = random.randint(140, 170)
+                        diastolic = random.randint(90, 108)
+                    else:
+                        systolic = random.randint(180, 220)
+                        diastolic = random.randint(110, 135)
 
-                BPReading.objects.create(
-                    patient=patient,
-                    systolic=systolic,
-                    diastolic=diastolic,
-                    pulse_rate=pulse,
-                    recorded_at=random_time,
-                    source='MANUAL',
-                )
-                total_readings += 1
+                    pulse = random.randint(60, 100)
+                    offset = random.randint(0, days)
+                    random_time = timezone.now() - timedelta(days=offset)
+                    random_time = random_time.replace(
+                        hour=random.randint(6, 20),
+                        minute=random.randint(0, 59),
+                        second=0,
+                        microsecond=0
+                    )
+
+                    BPReading.objects.create(
+                        patient=patient,
+                        systolic=systolic,
+                        diastolic=diastolic,
+                        pulse_rate=pulse,
+                        recorded_at=random_time,
+                        source='MANUAL',
+                    )
+                    total_readings += 1
 
             patients_created += 1
-            if patients_created % 20 == 0:
-                self.stdout.write(f'   Generated {patients_created}/{count} patients...')
+            if patients_created % 100 == 0:
+                self.stdout.write(
+                    f'   Generated {patients_created}/{count} patients...'
+                )
 
         self.stdout.write(self.style.SUCCESS('\nSeeding complete!'))
         self.stdout.write(f'   Patients created: {patients_created}')
+        self.stdout.write(f'   Patient user accounts: {patients_created}')
         self.stdout.write(f'   Total readings: {total_readings}')
-        self.stdout.write(f'   Average readings per patient: {total_readings / patients_created if patients_created else 0:.1f}')
+        self.stdout.write(
+            f'   Average readings per patient: '
+            f'{total_readings / patients_created if patients_created else 0:.1f}'
+        )
 
         alerts_count = Alert.objects.count()
         self.stdout.write(f'   Total alerts generated: {alerts_count}')
 
-        self.stdout.write('\nLogin credentials:')
+        self.stdout.write('\nClinician login:')
         self.stdout.write(f'   Username: {clinician_username}')
         self.stdout.write(f'   Password: {demo_password}')
+
+        if patient_password:
+            self.stdout.write('\nPatient logins:')
+            self.stdout.write(f'   Password (all patients): {patient_password}')
+            self.stdout.write(
+                f'   Example username: '
+                f'{FIRST_NAMES[0].lower()}.{LAST_NAMES[0].lower()}0000'
+            )
+        else:
+            self.stdout.write(
+                '\nPatient accounts have unusable passwords (cannot log in). '
+                'Re-run with --patient-password=<pw> if you want them usable.'
+            )
