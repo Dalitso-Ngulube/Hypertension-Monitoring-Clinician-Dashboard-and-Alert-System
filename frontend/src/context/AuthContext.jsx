@@ -3,6 +3,16 @@ import api from '../api/axiosConfig';
 
 export const AuthContext = createContext();
 
+const TOKEN_KEYS = {
+  access: 'access',
+  refresh: 'refresh',
+};
+
+const clearStoredTokens = () => {
+  localStorage.removeItem(TOKEN_KEYS.access);
+  localStorage.removeItem(TOKEN_KEYS.refresh);
+};
+
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
@@ -10,11 +20,13 @@ export const AuthProvider = ({ children }) => {
 
   const fetchUser = async () => {
     try {
-      const token = localStorage.getItem('access_token');
+      const token = localStorage.getItem(TOKEN_KEYS.access);
       console.log(' fetchUser - token present?', !!token);
       if (!token) {
         console.log(' No token, stopping fetch');
         setLoading(false);
+        setIsAuthenticated(false);
+        setUser(null);
         return;
       }
       console.log(' Fetching user from /auth/me/');
@@ -27,7 +39,9 @@ export const AuthProvider = ({ children }) => {
       console.error(' Failed to fetch user:', error);
       if (error.response?.status === 403 || error.response?.status === 401) {
         console.warn(' Token invalid/expired, logging out');
-        logout();
+        clearStoredTokens();
+        setIsAuthenticated(false);
+        setUser(null);
       }
     } finally {
       setLoading(false);
@@ -53,10 +67,10 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     console.warn(' logout() called – clearing tokens and state');
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
+    clearStoredTokens();
     setIsAuthenticated(false);
     setUser(null);
+    setLoading(false);
   };
 
   console.log(' AuthProvider state:', { isAuthenticated, user, loading });

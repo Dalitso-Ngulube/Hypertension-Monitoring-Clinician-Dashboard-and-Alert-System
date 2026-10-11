@@ -15,7 +15,11 @@ import ResetPasswordConfirm from './pages/ResetPasswordConfirm';
 import PatientDashboard from './pages/PatientDashboard';
 
 const PrivateRoute = ({ children, allowedRoles }) => {
-  const { isAuthenticated, user } = useContext(AuthContext);
+  const { isAuthenticated, user, loading } = useContext(AuthContext);
+
+  if (loading) {
+    return <div className="d-flex min-vh-100 align-items-center justify-content-center"><div className="spinner-border text-primary" role="status" aria-label="Loading session" /></div>;
+  }
 
   if (!isAuthenticated) {
     return <Navigate to="/" />;

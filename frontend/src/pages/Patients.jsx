@@ -86,7 +86,7 @@ const Patients = () => {
         </div>
         {isClinicianOrAdmin && (
           <div className="d-flex gap-2">
-            <button className="btn btn-outline-primary btn-sm" onClick={() => { const token = localStorage.getItem('access_token'); window.open(`http://localhost:8000/api/analytics/export/summary/?token=${token}`, '_blank'); }}>
+            <button className="btn btn-outline-primary btn-sm" onClick={() => { const token = localStorage.getItem('access'); window.open(`http://localhost:8000/api/analytics/export/summary/?token=${token}`, '_blank'); }}>
               <Download size={16} className="me-1" /> Export Summary
             </button>
             <button className="btn btn-primary btn-sm" onClick={() => setShowModal(true)}>

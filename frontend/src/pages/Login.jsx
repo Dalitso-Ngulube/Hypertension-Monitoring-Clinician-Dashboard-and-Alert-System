@@ -19,8 +19,8 @@ const Login = () => {
     setLoading(true);
     try {
       const response = await api.post('/auth/login/', { username, password });
-      localStorage.setItem('access_token', response.data.access);
-      localStorage.setItem('refresh_token', response.data.refresh);
+      localStorage.setItem('access', response.data.access);
+      localStorage.setItem('refresh', response.data.refresh);
       const loggedInUser = await login();
       if (!loggedInUser) {
         throw new Error('Unable to load the authenticated user profile.');

@@ -1,5 +1,10 @@
 import axios from 'axios';
 
+const TOKEN_KEYS = {
+  access: 'access',
+  refresh: 'refresh',
+};
+
 // Use environment variable if set, otherwise use the IPv4 loopback address.
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api';
 
@@ -13,7 +18,7 @@ const api = axios.create({
 // ──────────────────────────────────────────────────────────────
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem(TOKEN_KEYS.access);
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -42,7 +47,7 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const refreshToken = localStorage.getItem('refresh_token');
+        const refreshToken = localStorage.getItem(TOKEN_KEYS.refresh);
         if (!refreshToken) {
           logout();
           return Promise.reject(error);
@@ -54,7 +59,7 @@ api.interceptors.response.use(
         });
 
         const newAccessToken = response.data.access;
-        localStorage.setItem('access_token', newAccessToken);
+        localStorage.setItem(TOKEN_KEYS.access, newAccessToken);
 
         // Retry the original request with the new token
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
@@ -76,8 +81,8 @@ api.interceptors.response.use(
 // Helper: Clear tokens and redirect to login page
 // ──────────────────────────────────────────────────────────────
 function logout() {
-  localStorage.removeItem('access_token');
-  localStorage.removeItem('refresh_token');
+  localStorage.removeItem(TOKEN_KEYS.access);
+  localStorage.removeItem(TOKEN_KEYS.refresh);
   // Redirect to login if not already there
   if (window.location.pathname !== '/') {
     window.location.href = '/';

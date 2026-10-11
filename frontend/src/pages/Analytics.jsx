@@ -34,7 +34,7 @@ const Analytics = () => {
           <h1 className="sidebar-page-heading fw-bold">Analytics</h1>
           <p className="text-muted small">Explore detailed patient analytics and trends</p>
         </div>
-        <button className="btn btn-primary btn-sm" onClick={() => { const token = localStorage.getItem('access_token'); window.open(`http://localhost:8000/api/analytics/export/summary/?token=${token}`, '_blank'); }}>
+        <button className="btn btn-primary btn-sm" onClick={() => { const token = localStorage.getItem('access'); window.open(`http://localhost:8000/api/analytics/export/summary/?token=${token}`, '_blank'); }}>
           <Download size={16} className="me-1" /> Export Report
         </button>
       </div>
