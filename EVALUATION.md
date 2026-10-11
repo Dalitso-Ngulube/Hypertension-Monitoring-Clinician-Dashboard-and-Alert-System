@@ -1,13 +1,19 @@
 # Evaluation Report: Hypertension Monitoring System
 
-Run date: 15 September 2026
+Run date: 11 October 2026
+Commit: <paste `git rev-parse HEAD` here>
 
 ## 1. Reference-set classification results
 
-Reference file: `analytics/reference_readings.csv` (50 readings, ten per
-category). Each row cites the AHA/ACC 2017 guideline BP categories table in
-the `source` column. This is a standards-based reference set, not
+Reference file: `analytics/reference_readings.csv` (50 distinct readings,
+ten per category). Each row cites the AHA/ACC 2017 guideline BP categories
+table in the `source` column. This is a standards-based reference set, not
 clinician-confirmed patient data.
+
+A regression test (`test_reference_set_has_50_distinct_cases`) asserts
+that the file contains exactly 50 distinct (systolic, diastolic) pairs
+with ten in each AHA/ACC category, so future edits cannot silently reduce
+the set.
 
 Overall accuracy: **100.00%** (`50/50`) | Status: **PASS** against the
 reference labels.
@@ -35,35 +41,49 @@ Rows are expected categories; columns are predicted categories.
 | CRISIS   | 10 | 0 | 0 | 40 | 100.00% | 100.00% |
 
 The implementation classified every cited boundary, systolic-only,
-diastolic-only, and mixed case as expected. These results establish agreement
-with the independently coded reference table; they do not establish clinical
-validity or replace clinician review.
+diastolic-only, and mixed case as expected.
 
-The production classifier used by `BPReading.save()` and the independent
-reference classifier used by `analytics/evaluation.py` are currently identical
-implementations of the AHA/ACC threshold table. The reference classifier is
-still kept separate in the evaluation path so that any future divergence is
-detected rather than hidden by comparing a model value with the same function
-that produced it.
+### What the accuracy figure does and does not show
+
+The production classifier (invoked by `BPReading.save()`) and the
+reference classifier (used by `analytics/evaluation.py`) are two separate
+implementations of the same AHA/ACC threshold table. They agree by
+construction on the current reference set, so the 100% figure
+demonstrates internal consistency between the two code paths, not
+independent verification of the AHA/ACC table itself.
+
+The value of the two-implementation design is prospective: if either the
+production or the reference classifier is changed — for example, when the
+WHO 2021 treatment thresholds are integrated in future work — the two
+will diverge, and the evaluation harness will flag the divergence instead
+of silently absorbing it. This is why the reference classifier is kept
+in a separate module rather than sharing code with the production
+classifier.
+
+The 100% figure should therefore be read as a regression guard against
+accidental classifier change, not as evidence of clinical accuracy.
+Clinical accuracy would require a clinician-labelled reference set (see
+section 2).
 
 ## 2. Reference-set provenance
 
 The `source` value on every row is `AHA/ACC 2017 Guideline BP categories
 table`. The expected labels follow the 2017 ACC/AHA thresholds: normal,
-elevated, stage 1, stage 2, and crisis. A clinician sign-off is still required
-before describing this file as clinically labelled. Reviewer name and date:
-**pending**.
+elevated, stage 1, stage 2, and crisis. A clinician sign-off is still
+required before describing this file as clinically labelled. Reviewer
+name and date: **pending**.
 
 ## 3. Alert evaluation
 
-Crisis alerts are keyed by the `Alert.reading` foreign key and alert type, so
-repeated crisis readings for one patient are evaluated individually. The
-report counts true positives, missed crisis alerts, false crisis alerts, and
-true negatives per reading.
+Crisis alerts are keyed by the `Alert.reading` foreign key and alert type,
+so repeated crisis readings for one patient are evaluated individually.
+The report counts true positives, missed crisis alerts, false crisis
+alerts, and true negatives per reading.
 
-The 15 September 2026 evaluation database contains 500 readings, including 56
-crisis and 444 non-crisis readings. Crisis sensitivity and specificity are
-therefore measurable.
+> **Pending update.** The figures below are from the 15 September 2026
+> database of 500 readings. The current database contains 10,000 readings
+> across 1,000 patients. Run `python manage.py evaluate --json` and paste
+> the new figures here before submission.
 
 | Metric | Result | Counts | Status |
 |---|---:|---|---|
