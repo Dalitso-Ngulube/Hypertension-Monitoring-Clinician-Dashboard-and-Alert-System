@@ -1,3 +1,4 @@
+from unittest.mock import patch
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -5,7 +6,7 @@ import pytest
 from django.utils import timezone
 
 from alerts.models import Alert
-from alerts.check_missed_readings import Command
+from alerts.management.commands.check_missed_readings import Command
 from alerts.services import AlertEngine
 from tests.factories import BPReadingFactory, PatientFactory
 
@@ -119,3 +120,44 @@ def test_check_missed_readings_command_notifies_patients_without_recent_readings
 
     assert check_missed.call_count == 2
     assert patient in [call.args[0] for call in check_missed.call_args_list]
+
+
+def test_missed_reading_alert_does_not_fire_twice_within_window():
+    """A second missed-reading alert should be suppressed within 14 days."""
+    patient = PatientFactory()
+    reading = BPReadingFactory(patient=patient)
+    type(reading).objects.filter(pk=reading.pk).update(
+        recorded_at=timezone.now() - timedelta(days=5)
+    )
+
+    AlertEngine.check_missed_readings(patient)
+    AlertEngine.check_missed_readings(patient)
+
+    assert Alert.objects.filter(
+        patient=patient,
+        alert_type='MISSED_READING',
+        is_resolved=False,
+    ).count() == 1
+
+
+def test_missed_reading_alert_fires_again_after_window():
+    """A new missed-reading alert should fire once the 14-day window elapses."""
+    patient = PatientFactory()
+    reading = BPReadingFactory(patient=patient)
+    type(reading).objects.filter(pk=reading.pk).update(
+        recorded_at=timezone.now() - timedelta(days=5)
+    )
+
+    first_now = timezone.now()
+    with patch('alerts.services.timezone.now', return_value=first_now):
+        AlertEngine.check_missed_readings(patient)
+
+    with patch(
+        'alerts.services.timezone.now',
+        return_value=first_now + timedelta(days=15),
+    ):
+        AlertEngine.check_missed_readings(patient)
+
+    assert Alert.objects.filter(
+        patient=patient, alert_type='MISSED_READING'
+    ).count() == 2
