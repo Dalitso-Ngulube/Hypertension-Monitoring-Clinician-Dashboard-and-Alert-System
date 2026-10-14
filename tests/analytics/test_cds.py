@@ -10,7 +10,7 @@ from analytics.cds_service import (
     get_clinical_summary,
     get_lab_recommendations,
     get_lifestyle_recommendations,
-    get_medication_recommendations,
+    get_monitoring_recommendations,
     get_recent_avg_bp,
 )
 from tests.factories import (
@@ -68,21 +68,43 @@ class TestCDS:
         assert 'labs' in data
         assert 'lifestyle' in data
 
-    def test_get_medication_recommendations_stage1(self):
+    def test_get_monitoring_recommendations_stage1(self):
         patient = PatientFactory()
-        recs = get_medication_recommendations(patient, 'STAGE_1', {})
+        recs = get_monitoring_recommendations(patient, 'STAGE_1', {})
         assert len(recs) > 0
-        assert any('monotherapy' in r['recommendation'].lower() for r in recs)
+        assert any(
+            'Stage 1' in r['recommendation'] or
+            'clinical assessment' in r['recommendation']
+            for r in recs
+        )
 
-    def test_medication_recommendations_crisis_and_comorbidities(self):
+    def test_monitoring_recommendations_crisis_and_comorbidities(self):
         patient = PatientFactory()
-        crisis = get_medication_recommendations(patient, 'CRISIS', {})
-        stage_two = get_medication_recommendations(
+        crisis = get_monitoring_recommendations(patient, 'CRISIS', {})
+        stage_two = get_monitoring_recommendations(
             patient, 'STAGE_2', {'diabetes': True}
         )
 
         assert crisis[0]['priority'] == 'URGENT'
-        assert 'ACE inhibitor' in stage_two[0]['recommendation']
+        assert 'immediate clinical assessment' in crisis[0]['recommendation']
+        assert 'Initiate' not in stage_two[0]['recommendation']
+        assert 'ACE inhibitor' not in stage_two[0]['recommendation']
+        assert any('diabetes' in r['recommendation'].lower() for r in stage_two)
+
+    def test_monitoring_recommendations_contain_no_drug_names(self):
+        """The CDS module must not issue prescribing instructions."""
+        patient = PatientFactory()
+        forbidden = (
+            'initiate', 'statin', 'aspirin', 'ace inhibitor', 'arb',
+            'thiazide', 'ccb', 'monotherapy', 'dual therapy',
+        )
+        for stage in ('NORMAL', 'ELEVATED', 'STAGE_1', 'STAGE_2', 'CRISIS'):
+            recs = get_monitoring_recommendations(patient, stage, {})
+            for rec in recs:
+                text = rec['recommendation'].lower()
+                assert not any(term in text for term in forbidden), (
+                    f"Prescribing text found in {stage}: {rec['recommendation']}"
+                )
 
     def test_labs_include_comorbidity_followups(self):
         labs = get_lab_recommendations(
@@ -103,7 +125,7 @@ class TestCDS:
 
         lifestyle = get_lifestyle_recommendations(patient, {})
 
-        assert any('DASH diet' in item for item in lifestyle)
+        assert any('DASH' in item for item in lifestyle)
         assert any('sodium' in item for item in lifestyle)
 
     def test_clinical_summary_formats_lists(self):
