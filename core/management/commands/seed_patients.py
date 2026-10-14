@@ -1,9 +1,8 @@
 import os
 import random
 from datetime import timedelta
-
+from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth import get_user_model
-from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.utils import timezone
 
@@ -135,8 +134,13 @@ class Command(BaseCommand):
             random.seed(seed)
             self.stdout.write(f'Using random seed: {seed}')
 
-        demo_password = os.getenv('DEMO_PASSWORD', 'Demo@2024!')
-
+        demo_password = os.getenv('DEMO_PASSWORD')
+        if not demo_password:
+            raise CommandError(
+                'DEMO_PASSWORD environment variable must be set. '
+                'Set it before running the seeder, e.g. '
+                'DEMO_PASSWORD=... python manage.py seed_patients'
+            )
         if clear_existing:
             self.stdout.write('Clearing existing patients, readings, and alerts...')
             Alert.objects.all().delete()
@@ -306,6 +310,9 @@ class Command(BaseCommand):
                         second=0,
                         microsecond=0
                     )
+                    
+                    if random_time > timezone.now():
+                        random_time -= timedelta(days=1)
 
                     BPReading.objects.create(
                         patient=patient,
