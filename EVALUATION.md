@@ -1,7 +1,7 @@
 # Evaluation Report: Hypertension Monitoring System
 
-Run date: 11 October 2026
-Commit: <paste `git rev-parse HEAD` here>
+Run date: 14th October 2026
+Commit: 3b4a7819016a407ae098ce4430f1c8bf96afd29a
 
 ## 1. Reference-set classification results
 
@@ -80,17 +80,7 @@ so repeated crisis readings for one patient are evaluated individually.
 The report counts true positives, missed crisis alerts, false crisis
 alerts, and true negatives per reading.
 
-> **Pending update.** The figures below are from the 15 September 2026
-> database of 500 readings. The current database contains 10,000 readings
-> across 1,000 patients. Run `python manage.py evaluate --json` and paste
-> the new figures here before submission.
-
 | Metric | Result | Counts | Status |
 |---|---:|---|---|
-| Sensitivity | 100.00% | TP 56, FN 0; crisis readings 56 | PASS |
-| Specificity | 100.00% | FP 0, TN 444; non-crisis readings 444 | PASS |
-
-Run command:
-
-```bash
-python manage.py evaluate --json
+| Sensitivity | 100.00% | TP 987, FN 0; crisis readings 987 | PASS |
+| Specificity | 100.00% | FP 0, TN 9,013; non-crisis readings 9,013 | PASS |

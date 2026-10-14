@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-09-15 13:27:20.045315+00:00",
+  "timestamp": "2026-10-14 16:31:48.295627+00:00",
   "classification_accuracy": {
     "accuracy": 100.0,
     "total": 50,
@@ -59,53 +59,54 @@
     "sensitivity": 100.0,
     "sensitivity_status": "measured",
     "specificity": 100.0,
-    "true_positive": 56,
+    "true_positive": 987,
     "false_negative": 0,
     "false_positive": 0,
-    "true_negative": 444,
-    "total_crisis_readings": 56,
-    "alerted_crisis_readings": 56,
+    "true_negative": 9013,
+    "total_crisis_readings": 987,
+    "alerted_crisis_readings": 987,
     "missed_alerts": 0,
-    "total_non_crisis_readings": 444,
+    "total_non_crisis_readings": 9013,
     "false_crisis_alerts": 0
   },
-  "total_patients": 52,
-  "total_readings": 500,
-  "total_alerts": 168,
+  "total_patients": 1000,
+  "total_readings": 10000,
+  "total_alerts": 2579,
   "alerts_by_severity": [
     {
       "severity": "MEDIUM",
-      "count": 50
+      "count": 915
     },
     {
       "severity": "CRITICAL",
-      "count": 74
+      "count": 987
     },
     {
       "severity": "HIGH",
-      "count": 44
+      "count": 677
     }
   ],
   "readings_by_risk": [
     {
       "risk_category": "CRISIS",
-      "count": 56
+      "count": 987
     },
     {
       "risk_category": "NORMAL",
-      "count": 98
+      "count": 2386
     },
     {
       "risk_category": "STAGE_1",
-      "count": 129
+      "count": 2095
     },
     {
       "risk_category": "ELEVATED",
-      "count": 67
+      "count": 1746
     },
     {
       "risk_category": "STAGE_2",
-      "count": 150
+      "count": 2786
     }
   ]
 }
+
