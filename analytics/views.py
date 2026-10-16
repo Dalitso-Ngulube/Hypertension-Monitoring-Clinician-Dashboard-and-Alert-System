@@ -14,6 +14,7 @@ from rest_framework.views import APIView
 from accounts.permissions import IsClinicianOrAdmin, IsOwnerOrClinician
 from alerts.models import Alert
 from bp_readings.models import BPReading
+from core.authentication import JWTAuthenticationFromQueryParam
 from patients.models import Patient
 
 from .cds_service import get_cds_recommendations
@@ -195,6 +196,7 @@ class PatientTimeOfDayPatternsView(APIView):
 
 
 class ExportPatientDataCSV(APIView):
+    authentication_classes = [JWTAuthenticationFromQueryParam]
     permission_classes = [IsAuthenticated, IsClinicianOrAdmin]
 
     def get(self, request, patient_id):
@@ -254,6 +256,7 @@ class ExportPatientDataCSV(APIView):
 
 
 class ExportAllPatientsSummaryCSV(APIView):
+    authentication_classes = [JWTAuthenticationFromQueryParam]
     permission_classes = [IsAuthenticated, IsClinicianOrAdmin]
 
     def get(self, request):
